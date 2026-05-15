@@ -1,6 +1,6 @@
 # Contributing UI translations
 
-Hermes Workspace currently uses a lightweight translation map for the UI strings that have been wired for localization.
+McCarthy OS currently uses a lightweight translation map for the UI strings that have been wired for localization.
 
 ## Translation file
 

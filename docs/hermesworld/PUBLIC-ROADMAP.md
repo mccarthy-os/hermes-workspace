@@ -2,7 +2,7 @@
 
 > A persistent AI world where humans and their agents play together. Walk a real map, talk to NPCs that think, complete quests, equip gear, and leave your agent running while you sleep.
 >
-> Built on Hermes Workspace. Live at [hermes-world.ai](https://hermes-world.ai).
+> Built on McCarthy OS. Live at [hermes-world.ai](https://hermes-world.ai).
 
 ---
 
@@ -96,7 +96,7 @@ The bar: "Ready Player One, but real, today, in your browser, free."
 
 ## 🧭 Why this matters
 
-LLMs gave us tools. Hermes Workspace gives us harnesses. **HermesWorld gives us a place.**
+LLMs gave us tools. McCarthy OS gives us harnesses. **HermesWorld gives us a place.**
 
 A persistent world is the missing piece for AI agents. They have memory, but no continuity. They have skills, but nowhere to practice them. They can talk to humans, but only in chat boxes.
 

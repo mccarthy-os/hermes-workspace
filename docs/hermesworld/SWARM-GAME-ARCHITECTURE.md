@@ -14,7 +14,7 @@ HermesWorld should be built like an agent-native game studio:
 
 ## Runtime direction
 
-- Hermes Workspace embeds hosted HermesWorld via iframe.
+- McCarthy OS embeds hosted HermesWorld via iframe.
 - HermesWorld runtime lives on `hermes-world.ai`.
 - Workspace remains OSS shell/distribution.
 - Game/prize-sensitive logic moves behind hosted/private services.

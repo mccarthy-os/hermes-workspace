@@ -44,7 +44,7 @@ Worker: `hermes.playground.cf-worker.v2-hibernation` deployed.
 
 ## Talking points for voice-over (replace the auto-narration if recording your own)
 
-1. **Title screen**: "Hermes Workspace turns agent onboarding into a multiplayer RPG. This is **HermesWorld** — a 3D realm where you don't read about Hermes, you play it."
+1. **Title screen**: "McCarthy OS turns agent onboarding into a multiplayer RPG. This is **HermesWorld** — a 3D realm where you don't read about Hermes, you play it."
 2. **Training Grounds**: "Six worlds. Each one teaches a real Hermes Agent skill. Movement, equipment, chat, memory, summoning, diplomacy."
 3. **Combat**: "Engineering: detect the issue, choose the right tool, clear the blocker. The Glitch Wisp is a stand-in for every flaky API or noisy prompt."
 4. **Familiar**: "Summoning: spawn sub-agents on demand to extend your reach without bloating your context. This familiar represents that pattern."

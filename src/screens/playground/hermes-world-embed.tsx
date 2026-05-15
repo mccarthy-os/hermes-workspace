@@ -22,7 +22,7 @@ export function HermesWorldEmbed() {
       {!loaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_50%_35%,rgba(168,85,247,.24),transparent_48%),#050015]">
           <div className="rounded-3xl border border-white/12 bg-black/35 px-6 py-5 text-center shadow-2xl backdrop-blur-xl">
-            <div className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-200/70">Hermes Workspace</div>
+            <div className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-200/70">McCarthy OS</div>
             <div className="mt-2 text-2xl font-black tracking-tight">Opening HermesWorld…</div>
             <div className="mt-2 text-sm text-white/58">Runtime hosted by hermes-world.ai</div>
           </div>

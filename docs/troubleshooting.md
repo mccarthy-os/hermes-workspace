@@ -1,4 +1,4 @@
-# Troubleshooting — Hermes Workspace
+# Troubleshooting — McCarthy OS
 
 Common setup issues and how to fix them.
 

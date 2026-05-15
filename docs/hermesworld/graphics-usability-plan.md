@@ -2,7 +2,7 @@
 
 Status: start now
 Owner: Eric / Aurora
-Stack: Hermes Workspace + React + Three.js / React Three Fiber
+Stack: McCarthy OS + React + Three.js / React Three Fiber
 
 ## Goal
 
@@ -20,7 +20,7 @@ Do **not** switch engines now.
 Stay on:
 - **Three.js**
 - **React Three Fiber**
-- current Hermes Workspace integration
+- current McCarthy OS integration
 
 Reason:
 - web shareability matters

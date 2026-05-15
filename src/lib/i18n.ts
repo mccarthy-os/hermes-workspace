@@ -1,5 +1,5 @@
 /**
- * Lightweight i18n — UI string translations for Hermes Workspace.
+ * Lightweight i18n — UI string translations for McCarthy OS.
  * Add new languages by adding a locale map below.
  */
 

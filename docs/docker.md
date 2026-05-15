@@ -1,6 +1,6 @@
 # Docker
 
-Hermes Workspace + Hermes Agent in containers.
+McCarthy OS + Hermes Agent in containers.
 
 ## TL;DR (single-host, localhost-only)
 
@@ -145,7 +145,7 @@ API_SERVER_KEY=<long random>
 
 If you bind the agent to `0.0.0.0` on a NAS without `API_SERVER_KEY`, the agent will refuse to start. This is intentional — open-internet exposure of the agent's chat endpoint without auth would be a footgun.
 
-## Hermes Workspace + Hermes Agent: why two containers?
+## McCarthy OS + Hermes Agent: why two containers?
 
 The workspace is the **UI**. The agent is the **engine**. Splitting them lets you:
 

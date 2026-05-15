@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Hermes Workspace are documented here.
+All notable changes to McCarthy OS are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [2.0.0] — 2026-04-20
 
-**Zero-fork release.** Clone, don't fork. Hermes Workspace now runs on vanilla `pip install hermes-agent` with no patches, no drift, no custom gateway required.
+**Zero-fork release.** Clone, don't fork. McCarthy OS now runs on vanilla `pip install hermes-agent` with no patches, no drift, no custom gateway required.
 
 ### Added
 - **Zero-fork architecture** — dual gateway/dashboard routing; workspace talks directly to vanilla `hermes-agent` 0.10.0+ via standard endpoints (`/v1/models`, `/api/sessions`, `/api/skills`, `/api/config`, `/api/jobs`)

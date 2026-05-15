@@ -36,7 +36,7 @@ Do **not** do these in this pass:
 
 These are core and should stay intact:
 
-1. HermesWorld lives **inside Hermes Workspace**
+1. HermesWorld lives **inside McCarthy OS**
 2. Every zone maps to real Hermes/agent concepts
 3. Multiplayer presence matters
 4. The world should stay readable on recordings and streams

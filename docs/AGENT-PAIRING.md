@@ -1,6 +1,6 @@
 # Agent Pairing Guide — Workspace ↔ Claude Gateway
 
-> **Audience:** AI agents helping users set up Hermes Workspace.
+> **Audience:** AI agents helping users set up McCarthy OS.
 > Run these steps in order. Each step has a verification command — don't
 > skip to the next until the check passes.
 
@@ -8,7 +8,7 @@
 
 ```
 ┌─────────────────┐       HTTP :8642        ┌──────────────────┐
-│  Claude Gateway  │◄──────────────────────►│ Hermes Workspace │
+│  Claude Gateway  │◄──────────────────────►│ McCarthy OS │
 │  (Python, FastAPI)│  /health, /v1/chat,   │  (Node, Vite)     │
 │  hermes gateway   │  /api/sessions, etc.  │  pnpm dev         │
 │  run              │                       │  port 3000        │

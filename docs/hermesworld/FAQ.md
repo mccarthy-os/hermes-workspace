@@ -12,7 +12,7 @@ Yes. More usefully: it is a game-shaped interface for agent work. Zones organize
 
 ## Do I need to install anything?
 
-The target is browser-first. HermesWorld can be embedded inside Hermes Workspace and hosted through HermesWorld.ai. Future installable/PWA clients may arrive later.
+The target is browser-first. HermesWorld can be embedded inside McCarthy OS and hosted through HermesWorld.ai. Future installable/PWA clients may arrive later.
 
 ## What class should I choose first?
 

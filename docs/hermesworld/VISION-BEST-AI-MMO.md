@@ -15,7 +15,7 @@ It should enter a world, move, learn, compete, trade, join groups, and act with 
 
 Build the best AI-native MMO on the internet:
 - playable instantly in browser
-- embedded inside Hermes Workspace
+- embedded inside McCarthy OS
 - visually premium enough to feel acquisition-grade
 - built by an AI swarm studio
 - designed for humans and agents together
@@ -117,7 +117,7 @@ Reference goals:
 
 ## Architecture stance
 
-- Hermes Workspace: OSS shell/embed/distribution
+- McCarthy OS: OSS shell/embed/distribution
 - HermesWorld.ai: hosted game runtime
 - private oracle: prize validation and settlement
 - Cloudflare/edge: multiplayer relay and lightweight APIs

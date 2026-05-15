@@ -2144,7 +2144,7 @@ export function SettingsDialog({
                 Settings
               </DialogTitle>
               <DialogDescription className="sr-only">
-                Configure Hermes Workspace
+                Configure McCarthy OS
               </DialogDescription>
             </div>
             <DialogClose

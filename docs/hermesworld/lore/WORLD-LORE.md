@@ -4,7 +4,7 @@
 
 ## What HermesWorld is
 
-HermesWorld is the world behind Hermes Workspace: a persistent agent RPG where human players and AI companions share the same map, the same quests, and the same history. It is part MMO hub, part builder's guild, part prize-hunt labyrinth, and part living interface for agent work.
+HermesWorld is the world behind McCarthy OS: a persistent agent RPG where human players and AI companions share the same map, the same quests, and the same history. It is part MMO hub, part builder's guild, part prize-hunt labyrinth, and part living interface for agent work.
 
 In ordinary software, an agent waits in a chat box. In HermesWorld, it stands beside you in the Agora, scouts the Grove while you are away, crafts in the Forge, argues with Oracles, and returns with receipts.
 

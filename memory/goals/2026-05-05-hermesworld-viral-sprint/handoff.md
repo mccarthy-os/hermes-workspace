@@ -90,9 +90,9 @@ Touched:
 Removed more workspace-local carryover text from the landing.
 
 Examples changed:
-- `Hermes Workspace Experiment // Persistent Agent World`
+- `McCarthy OS Experiment // Persistent Agent World`
   → `HermesWorld Preview // Persistent Agent World`
-- `Hermes Workspace Connected`
+- `McCarthy OS Connected`
   → `Live World Build`
 
 ### 8. Local preview/dev process debugging happened repeatedly

@@ -270,7 +270,7 @@ export function readWorkspaceUpdateStatus(
   if (installKind === 'desktop') {
     return {
       id: 'workspace',
-      label: 'Hermes Workspace',
+      label: 'McCarthy OS',
       installKind,
       version,
       path: repoPath,
@@ -290,7 +290,7 @@ export function readWorkspaceUpdateStatus(
   if (installKind === 'docker') {
     return {
       id: 'workspace',
-      label: 'Hermes Workspace',
+      label: 'McCarthy OS',
       installKind,
       version,
       path: repoPath,
@@ -310,7 +310,7 @@ export function readWorkspaceUpdateStatus(
   if (!gitRepo) {
     return {
       id: 'workspace',
-      label: 'Hermes Workspace',
+      label: 'McCarthy OS',
       installKind: 'unknown',
       version,
       path: repoPath,
@@ -350,7 +350,7 @@ export function readWorkspaceUpdateStatus(
 
   return {
     id: 'workspace',
-    label: 'Hermes Workspace',
+    label: 'McCarthy OS',
     installKind: 'git',
     version,
     path: repoPath,
@@ -574,7 +574,7 @@ export function applyWorkspaceUpdate(): ApplyUpdateResult {
   const releaseNotes = [
     {
       product: 'workspace' as const,
-      label: 'Hermes Workspace',
+      label: 'McCarthy OS',
       from: before.currentHead,
       to: after.currentHead,
       commits: readCommits(
