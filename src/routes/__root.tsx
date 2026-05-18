@@ -45,7 +45,6 @@ const APP_CSP = [
   "worker-src 'self' blob:",
   "media-src 'self' blob: data:",
   "frame-src 'self' http: https:",
-  "manifest-src 'self' https://mccarthyai.cloudflareaccess.com",
 ].join('; ')
 
 const THEME_STORAGE_KEY = 'claude-theme'
@@ -174,11 +173,6 @@ export const Route = createRootRoute({
         rel: 'icon',
         type: 'image/png',
         href: '/claude-avatar.png',
-      },
-      // PWA manifest and icons
-      {
-        rel: 'manifest',
-        href: '/manifest.json',
       },
       {
         rel: 'apple-touch-icon',
