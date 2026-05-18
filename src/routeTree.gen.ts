@@ -23,6 +23,7 @@ import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as MemoryRouteImport } from './routes/memory'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as HermesWorldRouteImport } from './routes/hermes-world'
 import { Route as FilesRouteImport } from './routes/files'
@@ -137,6 +138,9 @@ import { Route as ApiMcpConfigureRouteImport } from './routes/api/mcp/configure'
 import { Route as ApiMcpNameRouteImport } from './routes/api/mcp/$name'
 import { Route as ApiMccarthyUpdateStatusRouteImport } from './routes/api/mccarthy/update-status'
 import { Route as ApiMccarthyUpdateApplyRouteImport } from './routes/api/mccarthy/update-apply'
+import { Route as ApiMccarthyUninstallSkillRouteImport } from './routes/api/mccarthy/uninstall-skill'
+import { Route as ApiMccarthySkillsStatusRouteImport } from './routes/api/mccarthy/skills-status'
+import { Route as ApiMccarthyInstallSkillRouteImport } from './routes/api/mccarthy/install-skill'
 import { Route as ApiKnowledgeSyncRouteImport } from './routes/api/knowledge/sync'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api/knowledge/search'
 import { Route as ApiKnowledgeReadRouteImport } from './routes/api/knowledge/read'
@@ -223,6 +227,11 @@ const MemoryRoute = MemoryRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JobsRoute = JobsRouteImport.update({
@@ -796,6 +805,22 @@ const ApiMccarthyUpdateApplyRoute = ApiMccarthyUpdateApplyRouteImport.update({
   path: '/api/mccarthy/update-apply',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMccarthyUninstallSkillRoute =
+  ApiMccarthyUninstallSkillRouteImport.update({
+    id: '/api/mccarthy/uninstall-skill',
+    path: '/api/mccarthy/uninstall-skill',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiMccarthySkillsStatusRoute = ApiMccarthySkillsStatusRouteImport.update({
+  id: '/api/mccarthy/skills-status',
+  path: '/api/mccarthy/skills-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMccarthyInstallSkillRoute = ApiMccarthyInstallSkillRouteImport.update({
+  id: '/api/mccarthy/install-skill',
+  path: '/api/mccarthy/install-skill',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiKnowledgeSyncRoute = ApiKnowledgeSyncRouteImport.update({
   id: '/api/knowledge/sync',
   path: '/api/knowledge/sync',
@@ -896,6 +921,7 @@ export interface FileRoutesByFullPath {
   '/files': typeof FilesRoute
   '/hermes-world': typeof HermesWorldRoute
   '/jobs': typeof JobsRoute
+  '/marketplace': typeof MarketplaceRoute
   '/mcp': typeof McpRoute
   '/memory': typeof MemoryRoute
   '/operations': typeof OperationsRoute
@@ -995,6 +1021,9 @@ export interface FileRoutesByFullPath {
   '/api/knowledge/read': typeof ApiKnowledgeReadRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/knowledge/sync': typeof ApiKnowledgeSyncRoute
+  '/api/mccarthy/install-skill': typeof ApiMccarthyInstallSkillRoute
+  '/api/mccarthy/skills-status': typeof ApiMccarthySkillsStatusRoute
+  '/api/mccarthy/uninstall-skill': typeof ApiMccarthyUninstallSkillRoute
   '/api/mccarthy/update-apply': typeof ApiMccarthyUpdateApplyRoute
   '/api/mccarthy/update-status': typeof ApiMccarthyUpdateStatusRoute
   '/api/mcp/$name': typeof ApiMcpNameRouteWithChildren
@@ -1043,6 +1072,7 @@ export interface FileRoutesByTo {
   '/files': typeof FilesRoute
   '/hermes-world': typeof HermesWorldRoute
   '/jobs': typeof JobsRoute
+  '/marketplace': typeof MarketplaceRoute
   '/mcp': typeof McpRoute
   '/memory': typeof MemoryRoute
   '/operations': typeof OperationsRoute
@@ -1141,6 +1171,9 @@ export interface FileRoutesByTo {
   '/api/knowledge/read': typeof ApiKnowledgeReadRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/knowledge/sync': typeof ApiKnowledgeSyncRoute
+  '/api/mccarthy/install-skill': typeof ApiMccarthyInstallSkillRoute
+  '/api/mccarthy/skills-status': typeof ApiMccarthySkillsStatusRoute
+  '/api/mccarthy/uninstall-skill': typeof ApiMccarthyUninstallSkillRoute
   '/api/mccarthy/update-apply': typeof ApiMccarthyUpdateApplyRoute
   '/api/mccarthy/update-status': typeof ApiMccarthyUpdateStatusRoute
   '/api/mcp/$name': typeof ApiMcpNameRouteWithChildren
@@ -1190,6 +1223,7 @@ export interface FileRoutesById {
   '/files': typeof FilesRoute
   '/hermes-world': typeof HermesWorldRoute
   '/jobs': typeof JobsRoute
+  '/marketplace': typeof MarketplaceRoute
   '/mcp': typeof McpRoute
   '/memory': typeof MemoryRoute
   '/operations': typeof OperationsRoute
@@ -1289,6 +1323,9 @@ export interface FileRoutesById {
   '/api/knowledge/read': typeof ApiKnowledgeReadRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/knowledge/sync': typeof ApiKnowledgeSyncRoute
+  '/api/mccarthy/install-skill': typeof ApiMccarthyInstallSkillRoute
+  '/api/mccarthy/skills-status': typeof ApiMccarthySkillsStatusRoute
+  '/api/mccarthy/uninstall-skill': typeof ApiMccarthyUninstallSkillRoute
   '/api/mccarthy/update-apply': typeof ApiMccarthyUpdateApplyRoute
   '/api/mccarthy/update-status': typeof ApiMccarthyUpdateStatusRoute
   '/api/mcp/$name': typeof ApiMcpNameRouteWithChildren
@@ -1339,6 +1376,7 @@ export interface FileRouteTypes {
     | '/files'
     | '/hermes-world'
     | '/jobs'
+    | '/marketplace'
     | '/mcp'
     | '/memory'
     | '/operations'
@@ -1438,6 +1476,9 @@ export interface FileRouteTypes {
     | '/api/knowledge/read'
     | '/api/knowledge/search'
     | '/api/knowledge/sync'
+    | '/api/mccarthy/install-skill'
+    | '/api/mccarthy/skills-status'
+    | '/api/mccarthy/uninstall-skill'
     | '/api/mccarthy/update-apply'
     | '/api/mccarthy/update-status'
     | '/api/mcp/$name'
@@ -1486,6 +1527,7 @@ export interface FileRouteTypes {
     | '/files'
     | '/hermes-world'
     | '/jobs'
+    | '/marketplace'
     | '/mcp'
     | '/memory'
     | '/operations'
@@ -1584,6 +1626,9 @@ export interface FileRouteTypes {
     | '/api/knowledge/read'
     | '/api/knowledge/search'
     | '/api/knowledge/sync'
+    | '/api/mccarthy/install-skill'
+    | '/api/mccarthy/skills-status'
+    | '/api/mccarthy/uninstall-skill'
     | '/api/mccarthy/update-apply'
     | '/api/mccarthy/update-status'
     | '/api/mcp/$name'
@@ -1632,6 +1677,7 @@ export interface FileRouteTypes {
     | '/files'
     | '/hermes-world'
     | '/jobs'
+    | '/marketplace'
     | '/mcp'
     | '/memory'
     | '/operations'
@@ -1731,6 +1777,9 @@ export interface FileRouteTypes {
     | '/api/knowledge/read'
     | '/api/knowledge/search'
     | '/api/knowledge/sync'
+    | '/api/mccarthy/install-skill'
+    | '/api/mccarthy/skills-status'
+    | '/api/mccarthy/uninstall-skill'
     | '/api/mccarthy/update-apply'
     | '/api/mccarthy/update-status'
     | '/api/mcp/$name'
@@ -1780,6 +1829,7 @@ export interface RootRouteChildren {
   FilesRoute: typeof FilesRoute
   HermesWorldRoute: typeof HermesWorldRoute
   JobsRoute: typeof JobsRoute
+  MarketplaceRoute: typeof MarketplaceRoute
   McpRoute: typeof McpRoute
   MemoryRoute: typeof MemoryRoute
   OperationsRoute: typeof OperationsRoute
@@ -1873,6 +1923,9 @@ export interface RootRouteChildren {
   ApiKnowledgeReadRoute: typeof ApiKnowledgeReadRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
   ApiKnowledgeSyncRoute: typeof ApiKnowledgeSyncRoute
+  ApiMccarthyInstallSkillRoute: typeof ApiMccarthyInstallSkillRoute
+  ApiMccarthySkillsStatusRoute: typeof ApiMccarthySkillsStatusRoute
+  ApiMccarthyUninstallSkillRoute: typeof ApiMccarthyUninstallSkillRoute
   ApiMccarthyUpdateApplyRoute: typeof ApiMccarthyUpdateApplyRoute
   ApiMccarthyUpdateStatusRoute: typeof ApiMccarthyUpdateStatusRoute
   ApiModelInfoRoute: typeof ApiModelInfoRoute
@@ -1988,6 +2041,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jobs': {
@@ -2788,6 +2848,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMccarthyUpdateApplyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/mccarthy/uninstall-skill': {
+      id: '/api/mccarthy/uninstall-skill'
+      path: '/api/mccarthy/uninstall-skill'
+      fullPath: '/api/mccarthy/uninstall-skill'
+      preLoaderRoute: typeof ApiMccarthyUninstallSkillRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mccarthy/skills-status': {
+      id: '/api/mccarthy/skills-status'
+      path: '/api/mccarthy/skills-status'
+      fullPath: '/api/mccarthy/skills-status'
+      preLoaderRoute: typeof ApiMccarthySkillsStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mccarthy/install-skill': {
+      id: '/api/mccarthy/install-skill'
+      path: '/api/mccarthy/install-skill'
+      fullPath: '/api/mccarthy/install-skill'
+      preLoaderRoute: typeof ApiMccarthyInstallSkillRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/knowledge/sync': {
       id: '/api/knowledge/sync'
       path: '/api/knowledge/sync'
@@ -3106,6 +3187,7 @@ const rootRouteChildren: RootRouteChildren = {
   FilesRoute: FilesRoute,
   HermesWorldRoute: HermesWorldRoute,
   JobsRoute: JobsRoute,
+  MarketplaceRoute: MarketplaceRoute,
   McpRoute: McpRoute,
   MemoryRoute: MemoryRoute,
   OperationsRoute: OperationsRoute,
@@ -3199,6 +3281,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKnowledgeReadRoute: ApiKnowledgeReadRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
   ApiKnowledgeSyncRoute: ApiKnowledgeSyncRoute,
+  ApiMccarthyInstallSkillRoute: ApiMccarthyInstallSkillRoute,
+  ApiMccarthySkillsStatusRoute: ApiMccarthySkillsStatusRoute,
+  ApiMccarthyUninstallSkillRoute: ApiMccarthyUninstallSkillRoute,
   ApiMccarthyUpdateApplyRoute: ApiMccarthyUpdateApplyRoute,
   ApiMccarthyUpdateStatusRoute: ApiMccarthyUpdateStatusRoute,
   ApiModelInfoRoute: ApiModelInfoRoute,
