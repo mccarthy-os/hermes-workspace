@@ -150,6 +150,7 @@ function latestMtime(paths: Array<string>): string | undefined {
 }
 
 export function getActiveProfileName(): string {
+  if (process.env.HERMES_PROFILE) return process.env.HERMES_PROFILE.trim()
   const activePath = getActiveProfilePath()
   if (!fs.existsSync(activePath)) return 'default'
   try {
@@ -175,6 +176,7 @@ export function listProfiles(): Array<ProfileSummary> {
 
     for (const entry of entries) {
       const name = entry.name
+      if (name === 'default') continue
       const profilePath = path.join(profilesRoot, name)
       if (!entry.isDirectory()) {
         if (!entry.isSymbolicLink()) continue
