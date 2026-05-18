@@ -135,6 +135,8 @@ import { Route as ApiMcpHubSearchRouteImport } from './routes/api/mcp/hub-search
 import { Route as ApiMcpDiscoverRouteImport } from './routes/api/mcp/discover'
 import { Route as ApiMcpConfigureRouteImport } from './routes/api/mcp/configure'
 import { Route as ApiMcpNameRouteImport } from './routes/api/mcp/$name'
+import { Route as ApiMccarthyUpdateStatusRouteImport } from './routes/api/mccarthy/update-status'
+import { Route as ApiMccarthyUpdateApplyRouteImport } from './routes/api/mccarthy/update-apply'
 import { Route as ApiKnowledgeSyncRouteImport } from './routes/api/knowledge/sync'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api/knowledge/search'
 import { Route as ApiKnowledgeReadRouteImport } from './routes/api/knowledge/read'
@@ -784,6 +786,16 @@ const ApiMcpNameRoute = ApiMcpNameRouteImport.update({
   path: '/$name',
   getParentRoute: () => ApiMcpRoute,
 } as any)
+const ApiMccarthyUpdateStatusRoute = ApiMccarthyUpdateStatusRouteImport.update({
+  id: '/api/mccarthy/update-status',
+  path: '/api/mccarthy/update-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMccarthyUpdateApplyRoute = ApiMccarthyUpdateApplyRouteImport.update({
+  id: '/api/mccarthy/update-apply',
+  path: '/api/mccarthy/update-apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiKnowledgeSyncRoute = ApiKnowledgeSyncRouteImport.update({
   id: '/api/knowledge/sync',
   path: '/api/knowledge/sync',
@@ -983,6 +995,8 @@ export interface FileRoutesByFullPath {
   '/api/knowledge/read': typeof ApiKnowledgeReadRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/knowledge/sync': typeof ApiKnowledgeSyncRoute
+  '/api/mccarthy/update-apply': typeof ApiMccarthyUpdateApplyRoute
+  '/api/mccarthy/update-status': typeof ApiMccarthyUpdateStatusRoute
   '/api/mcp/$name': typeof ApiMcpNameRouteWithChildren
   '/api/mcp/configure': typeof ApiMcpConfigureRoute
   '/api/mcp/discover': typeof ApiMcpDiscoverRoute
@@ -1127,6 +1141,8 @@ export interface FileRoutesByTo {
   '/api/knowledge/read': typeof ApiKnowledgeReadRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/knowledge/sync': typeof ApiKnowledgeSyncRoute
+  '/api/mccarthy/update-apply': typeof ApiMccarthyUpdateApplyRoute
+  '/api/mccarthy/update-status': typeof ApiMccarthyUpdateStatusRoute
   '/api/mcp/$name': typeof ApiMcpNameRouteWithChildren
   '/api/mcp/configure': typeof ApiMcpConfigureRoute
   '/api/mcp/discover': typeof ApiMcpDiscoverRoute
@@ -1273,6 +1289,8 @@ export interface FileRoutesById {
   '/api/knowledge/read': typeof ApiKnowledgeReadRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/knowledge/sync': typeof ApiKnowledgeSyncRoute
+  '/api/mccarthy/update-apply': typeof ApiMccarthyUpdateApplyRoute
+  '/api/mccarthy/update-status': typeof ApiMccarthyUpdateStatusRoute
   '/api/mcp/$name': typeof ApiMcpNameRouteWithChildren
   '/api/mcp/configure': typeof ApiMcpConfigureRoute
   '/api/mcp/discover': typeof ApiMcpDiscoverRoute
@@ -1420,6 +1438,8 @@ export interface FileRouteTypes {
     | '/api/knowledge/read'
     | '/api/knowledge/search'
     | '/api/knowledge/sync'
+    | '/api/mccarthy/update-apply'
+    | '/api/mccarthy/update-status'
     | '/api/mcp/$name'
     | '/api/mcp/configure'
     | '/api/mcp/discover'
@@ -1564,6 +1584,8 @@ export interface FileRouteTypes {
     | '/api/knowledge/read'
     | '/api/knowledge/search'
     | '/api/knowledge/sync'
+    | '/api/mccarthy/update-apply'
+    | '/api/mccarthy/update-status'
     | '/api/mcp/$name'
     | '/api/mcp/configure'
     | '/api/mcp/discover'
@@ -1709,6 +1731,8 @@ export interface FileRouteTypes {
     | '/api/knowledge/read'
     | '/api/knowledge/search'
     | '/api/knowledge/sync'
+    | '/api/mccarthy/update-apply'
+    | '/api/mccarthy/update-status'
     | '/api/mcp/$name'
     | '/api/mcp/configure'
     | '/api/mcp/discover'
@@ -1849,6 +1873,8 @@ export interface RootRouteChildren {
   ApiKnowledgeReadRoute: typeof ApiKnowledgeReadRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
   ApiKnowledgeSyncRoute: typeof ApiKnowledgeSyncRoute
+  ApiMccarthyUpdateApplyRoute: typeof ApiMccarthyUpdateApplyRoute
+  ApiMccarthyUpdateStatusRoute: typeof ApiMccarthyUpdateStatusRoute
   ApiModelInfoRoute: typeof ApiModelInfoRoute
   ApiOauthDeviceCodeRoute: typeof ApiOauthDeviceCodeRoute
   ApiOauthPollTokenRoute: typeof ApiOauthPollTokenRoute
@@ -2748,6 +2774,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMcpNameRouteImport
       parentRoute: typeof ApiMcpRoute
     }
+    '/api/mccarthy/update-status': {
+      id: '/api/mccarthy/update-status'
+      path: '/api/mccarthy/update-status'
+      fullPath: '/api/mccarthy/update-status'
+      preLoaderRoute: typeof ApiMccarthyUpdateStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mccarthy/update-apply': {
+      id: '/api/mccarthy/update-apply'
+      path: '/api/mccarthy/update-apply'
+      fullPath: '/api/mccarthy/update-apply'
+      preLoaderRoute: typeof ApiMccarthyUpdateApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/knowledge/sync': {
       id: '/api/knowledge/sync'
       path: '/api/knowledge/sync'
@@ -3159,6 +3199,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKnowledgeReadRoute: ApiKnowledgeReadRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
   ApiKnowledgeSyncRoute: ApiKnowledgeSyncRoute,
+  ApiMccarthyUpdateApplyRoute: ApiMccarthyUpdateApplyRoute,
+  ApiMccarthyUpdateStatusRoute: ApiMccarthyUpdateStatusRoute,
   ApiModelInfoRoute: ApiModelInfoRoute,
   ApiOauthDeviceCodeRoute: ApiOauthDeviceCodeRoute,
   ApiOauthPollTokenRoute: ApiOauthPollTokenRoute,

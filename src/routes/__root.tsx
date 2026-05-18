@@ -18,6 +18,7 @@ import { Toaster } from '@/components/ui/toast'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 import { KeyboardShortcutsModal } from '@/components/keyboard-shortcuts-modal'
 import { UpdateCenterNotifier } from '@/components/update-center-notifier'
+import { McCarthyUpdateBanner } from '@/components/mccarthy-update-banner'
 import { initializeSettingsAppearance } from '@/hooks/use-settings'
 import { useApplyChatWidth } from '@/hooks/use-chat-settings'
 import {
@@ -381,6 +382,7 @@ function RootLayout() {
               But public launch surfaces like HermesWorld should not show app usage chrome. */}
           {!isGameSurfaceRoute ? <UsageMeter /> : null}
           {!isHermesWorldLandingRoute ? <KeyboardShortcutsModal /> : null}
+          {!isHermesWorldLandingRoute ? <McCarthyUpdateBanner /> : null}
           {!isHermesWorldLandingRoute ? <UpdateCenterNotifier /> : null}
           {rootSurfaceState.showPostOnboardingOverlays && !isGameSurfaceRoute ? (
             <>
