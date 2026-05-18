@@ -37,7 +37,7 @@ const APP_CSP = [
   "object-src 'none'",
   "form-action 'self'",
   // frame-ancestors is ignored in meta CSP and must be sent as an HTTP header.
-  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com",
@@ -45,6 +45,7 @@ const APP_CSP = [
   "worker-src 'self' blob:",
   "media-src 'self' blob: data:",
   "frame-src 'self' http: https:",
+  "manifest-src 'self' https://mccarthyai.cloudflareaccess.com",
 ].join('; ')
 
 const THEME_STORAGE_KEY = 'claude-theme'
@@ -156,7 +157,7 @@ export const Route = createRootRoute({
         content: '#0A0E1A',
       },
       {
-        name: 'apple-mobile-web-app-capable',
+        name: 'mobile-web-app-capable',
         content: 'yes',
       },
       {
