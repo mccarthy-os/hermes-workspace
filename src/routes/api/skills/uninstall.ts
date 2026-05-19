@@ -1,4 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { execFileSync } from 'node:child_process'
+import nodeos from 'node:os'
+import nodepath from 'node:path'
 import { json } from '@tanstack/react-start'
 import { isAuthenticated } from '../../../server/auth-middleware'
 import {
@@ -22,6 +25,8 @@ export const Route = createFileRoute('/api/skills/uninstall')({
           const body = (await request.json()) as {
             skillId?: string
             name?: string
+            category?: string
+            origin?: string
           }
           const name = (body.name || body.skillId || '').trim()
           if (!name) {
@@ -29,6 +34,33 @@ export const Route = createFileRoute('/api/skills/uninstall')({
               { ok: false, error: 'name or skillId required' },
               { status: 400 },
             )
+          }
+
+          // McCarthy skill uninstall
+          if (body.origin === 'mccarthy') {
+            const category = (body.category || '').trim()
+            const username = process.env.MCCARTHY_OS_USERNAME || nodeos.userInfo().username
+            if (!category) {
+              return json({ ok: false, error: 'category required for McCarthy skills' }, { status: 400 })
+            }
+            if (!/^[a-z0-9-]+$/.test(name) || !/^[a-z0-9-]+$/.test(category)) {
+              return json({ ok: false, error: 'Invalid skillId or category format' }, { status: 400 })
+            }
+            const scriptPath = nodepath.join(nodeos.homedir(), 'mccarthy-os-template/scripts/uninstall-skill.sh')
+            const uid = process.getuid ? process.getuid() : 1001
+            const xdgDir = '/run/user/' + uid
+            const dbusAddr = 'unix:path=' + xdgDir + '/bus'
+            try {
+              execFileSync('bash', [scriptPath, username, name, category], {
+                env: { ...process.env, XDG_RUNTIME_DIR: xdgDir, DBUS_SESSION_BUS_ADDRESS: dbusAddr },
+                timeout: 60_000,
+                stdio: 'pipe',
+              })
+              return json({ ok: true, action: 'uninstall', skillId: name })
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err)
+              return json({ ok: false, error: 'Uninstall script failed: ' + msg }, { status: 500 })
+            }
           }
 
           const capabilities = await ensureGatewayProbed()

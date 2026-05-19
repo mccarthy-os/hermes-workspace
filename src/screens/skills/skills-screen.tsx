@@ -1113,7 +1113,7 @@ function SkillsGrid({
                   Details
                 </Button>
 
-                {tab === 'installed' ? (
+                {tab === 'installed' && skill.installed ? (
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1.5 text-xs text-primary-500">
                       <Switch
