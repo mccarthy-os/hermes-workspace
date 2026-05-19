@@ -48,7 +48,7 @@ type SkillSummary = {
   enabled: boolean
   featuredGroup?: string
   security?: SecurityRisk
-  origin?: 'builtin' | 'agent-created' | 'marketplace'
+  origin?: 'builtin' | 'agent-created' | 'marketplace' | 'mccarthy'
 }
 
 type SkillsApiResponse = {
@@ -336,6 +336,8 @@ export function SkillsScreen() {
       skillId: string
       enabled?: boolean
       source?: HubSkill['source']
+      origin?: string
+      category?: string
     },
   ) {
     setActionError(null)
@@ -359,6 +361,8 @@ export function SkillsScreen() {
           identifier: payload.skillId,
           enabled: payload.enabled,
           source: payload.source,
+          origin: payload.origin,
+          category: payload.category,
         }),
       })
 
@@ -515,6 +519,7 @@ export function SkillsScreen() {
                   <option value="builtin">Built-in</option>
                   <option value="agent-created">Agent-created</option>
                   <option value="marketplace">Marketplace</option>
+                  <option value="mccarthy">McCarthy Skills</option>
                 </select>
               ) : null}
 
@@ -559,10 +564,14 @@ export function SkillsScreen() {
                 actionSkillId={actionSkillId}
                 tab="installed"
                 onOpenDetails={setSelectedSkill}
-                onInstall={(skillId) => runSkillAction('install', { skillId })}
-                onUninstall={(skillId) =>
-                  runSkillAction('uninstall', { skillId })
-                }
+                onInstall={(skillId) => {
+                  const skill = skills.find((s) => s.id === skillId)
+                  runSkillAction('install', { skillId, origin: skill?.origin, category: skill?.category })
+                }}
+                onUninstall={(skillId) => {
+                  const skill = skills.find((s) => s.id === skillId)
+                  runSkillAction('uninstall', { skillId, origin: skill?.origin, category: skill?.category })
+                }}
                 onToggle={(skillId, enabled) =>
                   runSkillAction('toggle', { skillId, enabled })
                 }
@@ -749,13 +758,17 @@ export function SkillsScreen() {
                           'border-amber-300/70 bg-amber-100/60 text-amber-700 dark:border-amber-700/50 dark:bg-amber-900/30 dark:text-amber-200',
                         selectedSkill.origin === 'marketplace' &&
                           'border-emerald-300/70 bg-emerald-100/60 text-emerald-700 dark:border-emerald-700/50 dark:bg-emerald-900/30 dark:text-emerald-200',
+                        selectedSkill.origin === 'mccarthy' &&
+                          'border-purple-300/70 bg-purple-100/60 text-purple-700 dark:border-purple-700/50 dark:bg-purple-900/30 dark:text-purple-200',
                       )}
                     >
                       {selectedSkill.origin === 'builtin'
                         ? 'Built-in'
                         : selectedSkill.origin === 'agent-created'
                           ? 'Agent-created'
-                          : 'Marketplace'}
+                          : selectedSkill.origin === 'mccarthy'
+                            ? 'McCarthy'
+                            : 'Marketplace'}
                     </span>
                   ) : null}
                   <p className="text-sm text-primary-500 text-pretty">
@@ -774,6 +787,8 @@ export function SkillsScreen() {
                       onClick={() => {
                         runSkillAction('uninstall', {
                           skillId: selectedSkill.id,
+                          origin: selectedSkill.origin,
+                          category: selectedSkill.category,
                         })
                       }}
                     >
@@ -784,7 +799,7 @@ export function SkillsScreen() {
                       size="sm"
                       disabled={actionSkillId === selectedSkill.id}
                       onClick={() =>
-                        runSkillAction('install', { skillId: selectedSkill.id })
+                        runSkillAction('install', { skillId: selectedSkill.id, origin: selectedSkill.origin, category: selectedSkill.category })
                       }
                     >
                       Install
@@ -1044,13 +1059,17 @@ function SkillsGrid({
                           'border-amber-300/70 bg-amber-100/60 text-amber-700 dark:border-amber-700/50 dark:bg-amber-900/30 dark:text-amber-200',
                         skill.origin === 'marketplace' &&
                           'border-emerald-300/70 bg-emerald-100/60 text-emerald-700 dark:border-emerald-700/50 dark:bg-emerald-900/30 dark:text-emerald-200',
+                        skill.origin === 'mccarthy' &&
+                          'border-purple-300/70 bg-purple-100/60 text-purple-700 dark:border-purple-700/50 dark:bg-purple-900/30 dark:text-purple-200',
                       )}
                     >
                       {skill.origin === 'builtin'
                         ? 'Built-in'
                         : skill.origin === 'agent-created'
                           ? 'Agent-created'
-                          : 'Marketplace'}
+                          : skill.origin === 'mccarthy'
+                            ? 'McCarthy'
+                            : 'Marketplace'}
                     </span>
                   ) : null}
                   <span

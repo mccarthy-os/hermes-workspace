@@ -1,6 +1,8 @@
 import os from 'node:os'
 import path from 'node:path'
 import fs from 'node:fs/promises'
+import { existsSync, readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { isAuthenticated } from '../../server/auth-middleware'
@@ -102,6 +104,91 @@ async function loadBundledManifest(): Promise<Set<string>> {
   }
 }
 
+// ── McCarthy Skills ──────────────────────────────────────────────────────────
+
+type ManifestSkill = {
+  id: string
+  name: string
+  category: string
+  description: string
+  source_path: string
+  tags: string[]
+  tier: string
+}
+
+function resolveHermesHomeForUser(username: string): string {
+  const perUserService = `hermes-gateway-${username}`
+  const perUserUnit = path.join(os.homedir(), `.config/systemd/user/${perUserService}.service`)
+  const defaultUnit = path.join(os.homedir(), '.config/systemd/user/hermes-gateway.service')
+  let unitPath: string
+  try {
+    execFileSync('systemctl', ['--user', 'is-active', perUserService], { stdio: 'pipe' })
+    unitPath = perUserUnit
+  } catch {
+    unitPath = defaultUnit
+  }
+  if (!existsSync(unitPath)) throw new Error(`Unit not found: ${unitPath}`)
+  const content = readFileSync(unitPath, 'utf-8')
+  const match = content.match(/^Environment="HERMES_HOME=(.+)"$/m)
+  if (!match) throw new Error(`HERMES_HOME not in ${unitPath}`)
+  return match[1].trim()
+}
+
+async function fetchMcCarthySkills(): Promise<Array<SkillSummary>> {
+  const username = process.env.MCCARTHY_OS_USERNAME
+  if (!username) return []
+
+  const manifestUrl =
+    process.env.MCCARTHY_SKILLS_MANIFEST_URL ||
+    'https://skills.mccarthyai.com/manifest.json'
+
+  try {
+    const res = await fetch(manifestUrl, { signal: AbortSignal.timeout(5000) })
+    if (!res.ok) return []
+    const manifest = (await res.json()) as { skills: Array<ManifestSkill> }
+    if (!Array.isArray(manifest.skills)) return []
+
+    let hermesHome = ''
+    try {
+      hermesHome = resolveHermesHomeForUser(username)
+    } catch {
+      // hermesHome stays '' — all skills show as not installed
+    }
+
+    return manifest.skills.map((skill): SkillSummary => {
+      let installed = false
+      if (hermesHome) {
+        const skillPath = path.join(hermesHome, 'skills', skill.category, skill.id, 'SKILL.md')
+        installed = existsSync(skillPath)
+      }
+      return {
+        id: skill.id,
+        slug: skill.id,
+        name: skill.name,
+        description: skill.description,
+        author: 'McCarthy OS',
+        triggers: skill.tags,
+        tags: skill.tags,
+        homepage: null,
+        category: skill.category,
+        icon: '⭐',
+        content: skill.description,
+        fileCount: 0,
+        sourcePath: skill.source_path,
+        installed,
+        enabled: installed,
+        featuredGroup: undefined,
+        security: { level: 'safe', flags: [], score: 0 },
+        origin: 'mccarthy',
+      }
+    })
+  } catch {
+    return []
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 function deriveOrigin(
   skill: SkillSummary,
   bundled: Set<string>,
@@ -139,7 +226,7 @@ type SkillSummary = {
   builtin?: boolean
   featuredGroup?: string
   security: SecurityRisk
-  origin: 'builtin' | 'agent-created' | 'marketplace'
+  origin: 'builtin' | 'agent-created' | 'marketplace' | 'mccarthy'
 }
 
 const KNOWN_CATEGORIES = [
@@ -456,11 +543,16 @@ export const Route = createFileRoute('/api/skills')({
             Math.max(1, Number(url.searchParams.get('limit') || '30')),
           )
 
-          const [sourceItems, localPathMap, bundledManifest] = await Promise.all([
-            fetchClaudeSkills(),
-            buildLocalSkillPathMap(),
-            loadBundledManifest(),
-          ])
+          const [sourceItems, localPathMap, bundledManifest, mccarthySkills] =
+            await Promise.all([
+              fetchClaudeSkills(),
+              buildLocalSkillPathMap(),
+              loadBundledManifest(),
+              fetchMcCarthySkills(),
+            ])
+
+          // Derive origin for Hermes skills; mark as mccarthy if in McCarthy manifest
+          const mccarthyIds = new Set(mccarthySkills.map((s) => s.id))
           for (const skill of sourceItems) {
             if (skill.installed) {
               const meta =
@@ -470,8 +562,19 @@ export const Route = createFileRoute('/api/skills')({
                 if (!skill.author) skill.author = meta.author
               }
             }
-            skill.origin = deriveOrigin(skill, bundledManifest)
+            skill.origin = mccarthyIds.has(skill.id)
+              ? 'mccarthy'
+              : deriveOrigin(skill, bundledManifest)
           }
+
+          // Add McCarthy skills not already in the Hermes list (uninstalled ones)
+          const installedIds = new Set(sourceItems.map((s) => s.id))
+          for (const ms of mccarthySkills) {
+            if (!installedIds.has(ms.id)) {
+              sourceItems.push(ms)
+            }
+          }
+
           const installedLookup = new Set(
             sourceItems
               .filter((skill) => skill.installed)
@@ -480,7 +583,11 @@ export const Route = createFileRoute('/api/skills')({
 
           const filteredByTab = sourceItems.filter((skill) => {
             if (tab === 'featured') return true
-            if (tab === 'installed') return skill.installed
+            if (tab === 'installed') {
+              // When browsing McCarthy Skills specifically, show all (installed + available)
+              if (origin === 'mccarthy') return skill.origin === 'mccarthy'
+              return skill.installed
+            }
             return true
           })
 
@@ -550,8 +657,46 @@ export const Route = createFileRoute('/api/skills')({
             category?: string
             force?: boolean
             enabled?: boolean
+            origin?: string
           }
           const action = (body.action || 'install').trim()
+
+          // Route McCarthy skill installs/uninstalls to the McCarthy scripts
+          if (body.origin === 'mccarthy' && action !== 'toggle') {
+            const username = process.env.MCCARTHY_OS_USERNAME
+            if (!username) {
+              return json({ ok: false, error: 'MCCARTHY_OS_USERNAME not set' }, { status: 500 })
+            }
+            const skillId = (body.name || body.identifier || '').trim()
+            const category = (body.category || '').trim()
+            if (!skillId || !category) {
+              return json({ ok: false, error: 'skillId and category are required for McCarthy skills' }, { status: 400 })
+            }
+            if (!/^[a-z0-9-]+$/.test(skillId) || !/^[a-z0-9-]+$/.test(category)) {
+              return json({ ok: false, error: 'Invalid skillId or category format' }, { status: 400 })
+            }
+            const scriptName = action === 'uninstall' ? 'uninstall-skill.sh' : 'install-skill.sh'
+            const scriptPath = path.join(os.homedir(), 'mccarthy-os-template/scripts', scriptName)
+            const uid = parseInt(
+              execFileSync('id', ['-u'], { encoding: 'utf8' }).trim(),
+              10,
+            )
+            try {
+              execFileSync('bash', [scriptPath, username, skillId, category], {
+                env: {
+                  ...process.env,
+                  XDG_RUNTIME_DIR: `/run/user/${uid}`,
+                  DBUS_SESSION_BUS_ADDRESS: `unix:path=/run/user/${uid}/bus`,
+                },
+                timeout: 30_000,
+                stdio: 'pipe',
+              })
+              return json({ ok: true })
+            } catch (err) {
+              const message = err instanceof Error ? err.message : 'Script failed'
+              return json({ ok: false, error: message }, { status: 500 })
+            }
+          }
 
           let endpoint: string
           let payload: Record<string, unknown>

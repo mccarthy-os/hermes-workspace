@@ -23,7 +23,6 @@ import {
   Sun02Icon,
   UserGroupIcon,
   UserMultipleIcon,
-  ShoppingBag01Icon,
 } from '@hugeicons/core-free-icons'
 import { AnimatePresence, motion } from 'motion/react'
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
@@ -864,13 +863,6 @@ function ChatSidebarComponent({
       label: t('nav.skills'),
       active: isSkillsActive,
       dataTour: 'skills',
-    },
-    {
-      kind: 'link',
-      to: '/marketplace',
-      icon: ShoppingBag01Icon,
-      label: 'Marketplace',
-      active: pathname === '/marketplace',
     },
     {
       kind: 'link',
