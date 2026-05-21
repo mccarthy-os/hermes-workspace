@@ -69,9 +69,9 @@ function defaultChatSettings(): ChatSettings {
     displayName: DEFAULT_CHAT_DISPLAY_NAME,
     avatarDataUrl: null,
     enterBehavior: 'send',
-    chatWidth: 'comfortable',
+    chatWidth: 'wide',
     sidebarHoverExpand: false,
-    soundOnChatComplete: false,
+    soundOnChatComplete: true,
   }
 }
 
