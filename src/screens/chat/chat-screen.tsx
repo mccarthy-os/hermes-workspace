@@ -52,6 +52,7 @@ import { useRealtimeChatHistory } from './hooks/use-realtime-chat-history'
 import { useSmoothStreamingText } from './hooks/use-smooth-streaming-text'
 import { useStreamingMessage } from './hooks/use-streaming-message'
 import { playChatComplete } from '@/lib/sounds'
+import { useVoiceTts } from '@/hooks/use-voice-tts'
 import { useChatSettingsStore } from '@/hooks/use-chat-settings'
 import { useActiveRunCheck } from './hooks/use-active-run-check'
 import { useChatMobile } from './hooks/use-chat-mobile'
@@ -1029,6 +1030,12 @@ export function ChatScreen({
   })
 
   const {
+    enabled: ttsEnabled,
+    play: ttsPlay,
+    toggle: ttsToggle,
+  } = useVoiceTts()
+
+  const {
     isStreaming: localIsStreaming,
     streamingText: localStreamingText,
     streamingMessageId: localStreamingMessageId,
@@ -1078,7 +1085,7 @@ export function ChatScreen({
       },
       [queryClient],
     ),
-    onComplete: useCallback(() => {
+    onComplete: useCallback((completedMessage: ChatMessage) => {
       const activeSend = activeSendRef.current
       if (activeSend?.clientId) {
         updateHistoryMessageByClientIdEverywhere(
@@ -1100,7 +1107,9 @@ export function ChatScreen({
       if (useChatSettingsStore.getState().settings.soundOnChatComplete) {
         playChatComplete()
       }
-    }, [queryClient, streamFinish]),
+      // Speak the completed assistant message via Deepgram TTS
+      void ttsPlay(textFromMessage(completedMessage))
+    }, [queryClient, streamFinish, ttsPlay]),
     onError: useCallback(
       (messageText: string) => {
         const activeSend = activeSendRef.current
@@ -2771,6 +2780,8 @@ export function ChatScreen({
               focusKey={`${isNewChat ? 'new' : activeFriendlyId}:${activeCanonicalKey ?? ''}`}
               thinkingLevel={thinkingLevel}
               onThinkingLevelChange={handleThinkingLevelChange}
+              ttsEnabled={ttsEnabled}
+              onTtsToggle={ttsToggle}
             />
           ) : null}
         </main>

@@ -8,6 +8,7 @@ import {
   Delete01Icon,
   Mic01Icon,
   StopIcon,
+  VolumeHighIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -49,7 +50,7 @@ import { Button } from '@/components/ui/button'
 import { usePinnedModels } from '@/hooks/use-pinned-models'
 // import { ModeSelector } from '@/components/mode-selector'
 import { cn } from '@/lib/utils'
-import { useVoiceInput } from '@/hooks/use-voice-input'
+import { useGroqStt } from '@/hooks/use-groq-stt'
 import { useVoiceRecorder } from '@/hooks/use-voice-recorder'
 import { toast } from '@/components/ui/toast'
 import {
@@ -95,6 +96,8 @@ type ChatComposerProps = {
    * must stay inline instead of docking fixed to the viewport bottom. */
   embedded?: boolean
   hideModelSelector?: boolean
+  ttsEnabled?: boolean
+  onTtsToggle?: () => void
 }
 
 type ChatComposerHelpers = {
@@ -800,6 +803,8 @@ function ChatComposerComponent({
   onAbort,
   embedded = false,
   hideModelSelector = false,
+  ttsEnabled = true,
+  onTtsToggle,
 }: ChatComposerProps) {
   const queryClient = useQueryClient()
   const mobileKeyboardInset = useWorkspaceStore((s) => s.mobileKeyboardInset)
@@ -1620,16 +1625,21 @@ function ChatComposerComponent({
   const _isWebSearchActive = webSearchEnabled ?? isWebSearchMode
   void _isWebSearchActive // retained for future use / external prop
 
-  // Voice input (tap = speech-to-text)
-  const voiceInput = useVoiceInput({
+  // Always-current ref to handleSubmit — setTimeout callback reads this after React flushes
+  const handleSubmitRef = useRef(handleSubmit)
+  handleSubmitRef.current = handleSubmit
+
+  // Voice input (tap = Groq STT → auto-submit)
+  const groqStt = useGroqStt({
     onResult: useCallback(
       (text: string) => {
         if (!text.trim()) return
-        setValue((prev) => {
-          const next = prev.trim().length > 0 ? `${prev} ${text}` : text
-          persistDraft(next)
-          return next
-        })
+        const trimmed = text.trim()
+        setValue(trimmed)
+        persistDraft(trimmed)
+        // setTimeout(0) fires after React flushes setValue, so handleSubmitRef.current
+        // holds the updated handleSubmit that reads the new value
+        setTimeout(() => handleSubmitRef.current(), 0)
       },
       [persistDraft],
     ),
@@ -1675,16 +1685,18 @@ function ChatComposerComponent({
   // Long-press detection for mic button
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLongPressRef = useRef(false)
+  // Suppresses the onClick that always fires after a long-press pointer-up
+  const justCompletedLongPressRef = useRef(false)
   const handleMicPointerDown = useCallback(() => {
     isLongPressRef.current = false
     // Start long-press timer for voice note recording (only if not already doing voice-to-text)
-    if (!voiceInput.isListening && !voiceRecorder.isRecording) {
+    if (!groqStt.isListening && !groqStt.isProcessing && !voiceRecorder.isRecording) {
       longPressTimerRef.current = setTimeout(() => {
         isLongPressRef.current = true
         voiceRecorder.start()
       }, 500)
     }
-  }, [voiceRecorder, voiceInput.isListening])
+  }, [voiceRecorder, groqStt.isListening, groqStt.isProcessing])
   const handleMicPointerUp = useCallback(() => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current)
@@ -1694,6 +1706,8 @@ function ChatComposerComponent({
       // Was a long press — stop voice note recording
       voiceRecorder.stop()
       isLongPressRef.current = false
+      // Mark so the following onClick event is swallowed (not treated as a tap-to-speak)
+      justCompletedLongPressRef.current = true
     }
     // Short taps are handled by onClick for voice-to-text toggle
   }, [voiceRecorder])
@@ -2147,16 +2161,20 @@ function ChatComposerComponent({
                       strokeWidth={2}
                     />
                   </button>
-                ) : voiceInput.isSupported || voiceRecorder.isSupported ? (
+                ) : groqStt.isSupported || voiceRecorder.isSupported ? (
                   <button
                     type="button"
                     onClick={() => {
-                      if (voiceInput.isListening) {
-                        voiceInput.stop()
+                      if (justCompletedLongPressRef.current) {
+                        justCompletedLongPressRef.current = false
+                        return
+                      }
+                      if (groqStt.isListening || groqStt.isProcessing) {
+                        groqStt.stop()
                       } else if (voiceRecorder.isRecording) {
                         voiceRecorder.stop()
                       } else {
-                        voiceInput.start()
+                        groqStt.start()
                       }
                     }}
                     onPointerDown={handleMicPointerDown}
@@ -2165,18 +2183,22 @@ function ChatComposerComponent({
                     aria-label={
                       voiceRecorder.isRecording
                         ? 'Recording voice note'
-                        : voiceInput.isListening
+                        : groqStt.isListening
                           ? 'Stop listening'
-                          : 'Voice input'
+                          : groqStt.isProcessing
+                            ? 'Processing…'
+                            : 'Voice input'
                     }
                     disabled={disabled}
                     className={cn(
                       'size-9 rounded-full flex items-center justify-center relative transition-all duration-150 select-none',
                       voiceRecorder.isRecording
                         ? 'text-red-600 bg-red-100 animate-pulse'
-                        : voiceInput.isListening
+                        : groqStt.isListening
                           ? 'text-red-500 bg-red-50 animate-pulse'
-                          : 'text-primary-500 bg-neutral-100 dark:bg-white/10',
+                          : groqStt.isProcessing
+                            ? 'text-amber-500 bg-amber-50 animate-pulse'
+                            : 'text-primary-500 bg-neutral-100 dark:bg-white/10',
                     )}
                   >
                     <HugeiconsIcon
@@ -2871,24 +2893,49 @@ function ChatComposerComponent({
               </div>
               <div className="ml-1 flex shrink-0 items-center gap-0.5 md:gap-1">
                 <ContextBar compact sessionId={sessionKey} />
-                {voiceInput.isSupported || voiceRecorder.isSupported ? (
+                {onTtsToggle ? (
+                  <PromptInputAction tooltip={ttsEnabled ? 'Voice responses on' : 'Voice responses off'}>
+                    <Button
+                      type="button"
+                      onClick={onTtsToggle}
+                      size="icon-sm"
+                      variant="ghost"
+                      className={cn(
+                        'rounded-lg transition-colors',
+                        ttsEnabled
+                          ? 'text-primary-500 hover:bg-primary-100 dark:hover:bg-primary-800'
+                          : 'text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/10',
+                      )}
+                      aria-label={ttsEnabled ? 'Voice responses on — click to mute' : 'Voice responses off — click to enable'}
+                    >
+                      <HugeiconsIcon icon={VolumeHighIcon} size={20} strokeWidth={1.5} />
+                    </Button>
+                  </PromptInputAction>
+                ) : null}
+                {groqStt.isSupported || voiceRecorder.isSupported ? (
                   <PromptInputAction
                     tooltip={
                       voiceRecorder.isRecording
                         ? `Recording… ${Math.round(voiceRecorder.durationMs / 1000)}s`
-                        : voiceInput.isListening
+                        : groqStt.isListening
                           ? 'Listening — tap to stop'
-                          : 'Tap: dictate · Hold: voice note'
+                          : groqStt.isProcessing
+                            ? 'Processing…'
+                            : 'Tap: dictate · Hold: voice note'
                     }
                   >
                     <Button
                       onClick={() => {
-                        if (voiceInput.isListening) {
-                          voiceInput.stop()
+                        if (justCompletedLongPressRef.current) {
+                          justCompletedLongPressRef.current = false
+                          return
+                        }
+                        if (groqStt.isListening || groqStt.isProcessing) {
+                          groqStt.stop()
                         } else if (voiceRecorder.isRecording) {
                           voiceRecorder.stop()
                         } else {
-                          voiceInput.start()
+                          groqStt.start()
                         }
                       }}
                       onPointerDown={handleMicPointerDown}
@@ -2900,16 +2947,20 @@ function ChatComposerComponent({
                         'rounded-lg transition-colors select-none',
                         voiceRecorder.isRecording
                           ? 'text-red-600 bg-red-100 hover:bg-red-200 animate-pulse'
-                          : voiceInput.isListening
+                          : groqStt.isListening
                             ? 'text-red-500 bg-red-50 hover:bg-red-100 animate-pulse'
-                            : 'text-primary-500 hover:bg-primary-100 dark:hover:bg-primary-800 hover:text-primary-700',
+                            : groqStt.isProcessing
+                              ? 'text-amber-500 bg-amber-50 hover:bg-amber-100 animate-pulse'
+                              : 'text-primary-500 hover:bg-primary-100 dark:hover:bg-primary-800 hover:text-primary-700',
                       )}
                       aria-label={
                         voiceRecorder.isRecording
                           ? 'Recording voice note'
-                          : voiceInput.isListening
+                          : groqStt.isListening
                             ? 'Stop listening'
-                            : 'Voice input'
+                            : groqStt.isProcessing
+                              ? 'Processing…'
+                              : 'Voice input'
                       }
                       disabled={disabled}
                     >
