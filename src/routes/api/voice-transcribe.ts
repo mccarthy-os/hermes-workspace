@@ -21,6 +21,7 @@ export const Route = createFileRoute('/api/voice-transcribe')({
         const outForm = new FormData()
         outForm.append('file', audio as Blob, 'audio.webm')
         outForm.append('model', 'whisper-large-v3-turbo')
+        outForm.append('language', 'en')
 
         const start = Date.now()
 

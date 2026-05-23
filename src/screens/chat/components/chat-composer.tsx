@@ -1,6 +1,7 @@
-import { createPortal } from 'react-dom'
+import { createPortal, flushSync } from 'react-dom'
 import {
   Add01Icon,
+  AiMicIcon,
   ArrowDown01Icon,
   ArrowUp02Icon,
   AttachmentIcon,
@@ -1635,11 +1636,13 @@ function ChatComposerComponent({
       (text: string) => {
         if (!text.trim()) return
         const trimmed = text.trim()
-        setValue(trimmed)
-        persistDraft(trimmed)
-        // setTimeout(0) fires after React flushes setValue, so handleSubmitRef.current
-        // holds the updated handleSubmit that reads the new value
-        setTimeout(() => handleSubmitRef.current(), 0)
+        // flushSync forces React to commit the value update synchronously so
+        // handleSubmitRef.current closes over the new value before we call it.
+        flushSync(() => {
+          setValue(trimmed)
+          persistDraft(trimmed)
+        })
+        handleSubmitRef.current()
       },
       [persistDraft],
     ),
@@ -1682,34 +1685,39 @@ function ChatComposerComponent({
     ),
   })
 
-  // Long-press detection for mic button
+  // Push-to-talk handlers for the AI mic (STT) button
+  const handleSttPointerDown = useCallback(() => {
+    if (!groqStt.isListening && !groqStt.isProcessing) {
+      groqStt.start()
+    }
+  }, [groqStt])
+  const handleSttPointerUp = useCallback(() => {
+    if (groqStt.isListening) {
+      groqStt.stop()
+    }
+  }, [groqStt])
+
+  // Long-press detection for voice-note mic button (voice note only)
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLongPressRef = useRef(false)
-  // Suppresses the onClick that always fires after a long-press pointer-up
-  const justCompletedLongPressRef = useRef(false)
   const handleMicPointerDown = useCallback(() => {
     isLongPressRef.current = false
-    // Start long-press timer for voice note recording (only if not already doing voice-to-text)
-    if (!groqStt.isListening && !groqStt.isProcessing && !voiceRecorder.isRecording) {
+    if (!voiceRecorder.isRecording) {
       longPressTimerRef.current = setTimeout(() => {
         isLongPressRef.current = true
         voiceRecorder.start()
-      }, 500)
+      }, 800)
     }
-  }, [voiceRecorder, groqStt.isListening, groqStt.isProcessing])
+  }, [voiceRecorder])
   const handleMicPointerUp = useCallback(() => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current)
       longPressTimerRef.current = null
     }
     if (isLongPressRef.current) {
-      // Was a long press — stop voice note recording
       voiceRecorder.stop()
       isLongPressRef.current = false
-      // Mark so the following onClick event is swallowed (not treated as a tap-to-speak)
-      justCompletedLongPressRef.current = true
     }
-    // Short taps are handled by onClick for voice-to-text toggle
   }, [voiceRecorder])
 
   const handleAbort = useCallback(
@@ -2135,7 +2143,7 @@ function ChatComposerComponent({
               />
 
               {/* Right side: stop / send / mic */}
-              <div className="shrink-0">
+              <div className="shrink-0 flex items-center gap-1">
                 {isLoading ? (
                   <button
                     type="button"
@@ -2161,57 +2169,34 @@ function ChatComposerComponent({
                       strokeWidth={2}
                     />
                   </button>
-                ) : groqStt.isSupported || voiceRecorder.isSupported ? (
+                ) : groqStt.isSupported ? (
                   <button
                     type="button"
-                    onClick={() => {
-                      if (justCompletedLongPressRef.current) {
-                        justCompletedLongPressRef.current = false
-                        return
-                      }
-                      if (groqStt.isListening || groqStt.isProcessing) {
-                        groqStt.stop()
-                      } else if (voiceRecorder.isRecording) {
-                        voiceRecorder.stop()
-                      } else {
-                        groqStt.start()
-                      }
-                    }}
-                    onPointerDown={handleMicPointerDown}
-                    onPointerUp={handleMicPointerUp}
-                    onPointerLeave={handleMicPointerUp}
+                    onPointerDown={handleSttPointerDown}
+                    onPointerUp={handleSttPointerUp}
+                    onPointerLeave={handleSttPointerUp}
                     aria-label={
-                      voiceRecorder.isRecording
-                        ? 'Recording voice note'
-                        : groqStt.isListening
-                          ? 'Stop listening'
-                          : groqStt.isProcessing
-                            ? 'Processing…'
-                            : 'Voice input'
+                      groqStt.isListening
+                        ? 'Listening… release to send'
+                        : groqStt.isProcessing
+                          ? 'Processing…'
+                          : 'Hold to talk'
                     }
                     disabled={disabled}
                     className={cn(
                       'size-9 rounded-full flex items-center justify-center relative transition-all duration-150 select-none',
-                      voiceRecorder.isRecording
-                        ? 'text-red-600 bg-red-100 animate-pulse'
-                        : groqStt.isListening
-                          ? 'text-red-500 bg-red-50 animate-pulse'
-                          : groqStt.isProcessing
-                            ? 'text-amber-500 bg-amber-50 animate-pulse'
-                            : 'text-primary-500 bg-neutral-100 dark:bg-white/10',
+                      groqStt.isListening
+                        ? 'text-red-500 bg-red-50 animate-pulse'
+                        : groqStt.isProcessing
+                          ? 'text-amber-500 bg-amber-50 animate-pulse'
+                          : 'text-primary-500 bg-neutral-100 dark:bg-white/10',
                     )}
                   >
                     <HugeiconsIcon
-                      icon={Mic01Icon}
+                      icon={groqStt.isListening || groqStt.isProcessing ? Mic01Icon : AiMicIcon}
                       size={20}
                       strokeWidth={1.5}
                     />
-                    {voiceRecorder.isRecording ? (
-                      <span className="absolute -top-1 -right-1 flex size-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                        <span className="relative inline-flex size-3 rounded-full bg-red-500" />
-                      </span>
-                    ) : null}
                   </button>
                 ) : (
                   <button
@@ -2912,69 +2897,44 @@ function ChatComposerComponent({
                     </Button>
                   </PromptInputAction>
                 ) : null}
-                {groqStt.isSupported || voiceRecorder.isSupported ? (
+                {groqStt.isSupported ? (
                   <PromptInputAction
                     tooltip={
-                      voiceRecorder.isRecording
-                        ? `Recording… ${Math.round(voiceRecorder.durationMs / 1000)}s`
-                        : groqStt.isListening
-                          ? 'Listening — tap to stop'
-                          : groqStt.isProcessing
-                            ? 'Processing…'
-                            : 'Tap: dictate · Hold: voice note'
+                      groqStt.isListening
+                        ? 'Listening… release to send'
+                        : groqStt.isProcessing
+                          ? 'Processing…'
+                          : 'Hold to talk'
                     }
                   >
                     <Button
-                      onClick={() => {
-                        if (justCompletedLongPressRef.current) {
-                          justCompletedLongPressRef.current = false
-                          return
-                        }
-                        if (groqStt.isListening || groqStt.isProcessing) {
-                          groqStt.stop()
-                        } else if (voiceRecorder.isRecording) {
-                          voiceRecorder.stop()
-                        } else {
-                          groqStt.start()
-                        }
-                      }}
-                      onPointerDown={handleMicPointerDown}
-                      onPointerUp={handleMicPointerUp}
-                      onPointerLeave={handleMicPointerUp}
+                      onPointerDown={handleSttPointerDown}
+                      onPointerUp={handleSttPointerUp}
+                      onPointerLeave={handleSttPointerUp}
                       size="icon-sm"
                       variant="ghost"
                       className={cn(
                         'rounded-lg transition-colors select-none',
-                        voiceRecorder.isRecording
-                          ? 'text-red-600 bg-red-100 hover:bg-red-200 animate-pulse'
-                          : groqStt.isListening
-                            ? 'text-red-500 bg-red-50 hover:bg-red-100 animate-pulse'
-                            : groqStt.isProcessing
-                              ? 'text-amber-500 bg-amber-50 hover:bg-amber-100 animate-pulse'
-                              : 'text-primary-500 hover:bg-primary-100 dark:hover:bg-primary-800 hover:text-primary-700',
+                        groqStt.isListening
+                          ? 'text-red-500 bg-red-50 hover:bg-red-100 animate-pulse'
+                          : groqStt.isProcessing
+                            ? 'text-amber-500 bg-amber-50 hover:bg-amber-100 animate-pulse'
+                            : 'text-primary-500 hover:bg-primary-100 dark:hover:bg-primary-800 hover:text-primary-700',
                       )}
                       aria-label={
-                        voiceRecorder.isRecording
-                          ? 'Recording voice note'
-                          : groqStt.isListening
-                            ? 'Stop listening'
-                            : groqStt.isProcessing
-                              ? 'Processing…'
-                              : 'Voice input'
+                        groqStt.isListening
+                          ? 'Listening… release to send'
+                          : groqStt.isProcessing
+                            ? 'Processing…'
+                            : 'Hold to talk'
                       }
                       disabled={disabled}
                     >
                       <HugeiconsIcon
-                        icon={Mic01Icon}
+                        icon={groqStt.isListening || groqStt.isProcessing ? Mic01Icon : AiMicIcon}
                         size={20}
                         strokeWidth={1.5}
                       />
-                      {voiceRecorder.isRecording ? (
-                        <span className="absolute -top-1 -right-1 flex size-3">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                          <span className="relative inline-flex size-3 rounded-full bg-red-500" />
-                        </span>
-                      ) : null}
                     </Button>
                   </PromptInputAction>
                 ) : null}

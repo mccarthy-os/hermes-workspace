@@ -160,6 +160,40 @@ function normalizeMessageValue(value: unknown): string {
   return trimmed.length > 0 ? trimmed : ''
 }
 
+/**
+ * Strip markdown and technical noise before passing text to TTS.
+ * Returns empty string when the fragment is pure code/commands so the
+ * caller can skip it (cron expressions, file paths, shell snippets, etc.).
+ */
+function cleanForTts(raw: string): string {
+  let t = raw
+  // Remove fenced code blocks entirely
+  t = t.replace(/```[\s\S]*?```/g, ' ')
+  // Remove inline code
+  t = t.replace(/`[^`\n]+`/g, ' ')
+  // Unwrap bold / italic (keep the text)
+  t = t.replace(/\*\*([^*\n]+)\*\*/g, '$1')
+  t = t.replace(/\*([^*\n]+)\*/g, '$1')
+  t = t.replace(/__([^_\n]+)__/g, '$1')
+  t = t.replace(/_([^_\n]+)_/g, '$1')
+  // Strip ATX headers, list markers, blockquotes
+  t = t.replace(/^#{1,6}\s+/gm, '')
+  t = t.replace(/^[ \t]*[-*+>]\s+/gm, '')
+  t = t.replace(/^[ \t]*\d+[.)]\s+/gm, '')
+  // Strip URLs and markdown links (keep label text)
+  t = t.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+  t = t.replace(/https?:\/\/[^\s)>\]]+/g, '')
+  // Normalise whitespace
+  t = t.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim()
+  // Reject fragments where < 45 % of characters are letters — these are
+  // almost always technical strings (cron expressions, paths, commands).
+  if (t.length > 4) {
+    const alpha = (t.match(/[a-zA-Z]/g) ?? []).length
+    if (alpha / t.length < 0.45) return ''
+  }
+  return t
+}
+
 function getPortableHistoryContent(message: ChatMessage): string {
   const text = textFromMessage(message).trim()
   if (text) return text
@@ -1031,9 +1065,19 @@ export function ChatScreen({
 
   const {
     enabled: ttsEnabled,
-    play: ttsPlay,
+    enqueue: ttsEnqueue,
+    stop: ttsStop,
     toggle: ttsToggle,
   } = useVoiceTts()
+
+  // Ref so onChunk (a stable useCallback) can always read the current ttsEnabled
+  // without being recreated every time the user toggles voice.
+  const ttsEnabledRef = useRef(ttsEnabled)
+  ttsEnabledRef.current = ttsEnabled
+
+  // Tracks how many characters of the streaming response have already been
+  // enqueued for TTS so we don't re-speak text on each chunk event.
+  const spokenUpToRef = useRef(0)
 
   const {
     isStreaming: localIsStreaming,
@@ -1068,8 +1112,28 @@ export function ChatScreen({
       },
       [activeFriendlyId, onSessionResolved],
     ),
+    onChunk: useCallback((_delta: string, fullText: string) => {
+      if (!ttsEnabledRef.current) return
+      // Detect sentence boundaries in the unprocessed portion of the stream.
+      // Enqueue each completed sentence immediately so audio starts within ~1s
+      // of the first sentence arriving — matching the test-build behaviour.
+      const unprocessed = fullText.slice(spokenUpToRef.current)
+      const re = /[.!?]+\s+/g
+      let match
+      let prevEnd = 0
+      while ((match = re.exec(unprocessed)) !== null) {
+        const sentence = unprocessed.slice(prevEnd, match.index + 1).trim()
+        prevEnd = match.index + match[0].length
+        const clean = cleanForTts(sentence)
+        if (clean.length > 2) ttsEnqueue(clean)
+      }
+      spokenUpToRef.current += prevEnd
+    }, [ttsEnqueue]),
     onStarted: useCallback(
       ({ runId }: { runId: string | null }) => {
+        // Stop any TTS from the previous turn before the new stream begins
+        ttsStop()
+        spokenUpToRef.current = 0
         const activeSend = activeSendRef.current
         if (!activeSend?.clientId) return
         updateHistoryMessageByClientIdEverywhere(
@@ -1083,7 +1147,7 @@ export function ChatScreen({
         )
         setSending(false)
       },
-      [queryClient],
+      [queryClient, ttsStop],
     ),
     onComplete: useCallback((completedMessage: ChatMessage) => {
       const activeSend = activeSendRef.current
@@ -1103,13 +1167,17 @@ export function ChatScreen({
       // Clear waitingForResponse so ThinkingBubble hides and message renders
       streamFinish()
       // Play notification sound if the user opted in (Settings → Chat).
-      // Read directly from the store to avoid re-creating this callback on every settings change.
       if (useChatSettingsStore.getState().settings.soundOnChatComplete) {
         playChatComplete()
       }
-      // Speak the completed assistant message via Deepgram TTS
-      void ttsPlay(textFromMessage(completedMessage))
-    }, [queryClient, streamFinish, ttsPlay]),
+      // Flush any remaining text that didn't end with a sentence boundary
+      if (ttsEnabledRef.current) {
+        const fullText = textFromMessage(completedMessage)
+        const remaining = cleanForTts(fullText.slice(spokenUpToRef.current).trim())
+        if (remaining.length > 2) ttsEnqueue(remaining)
+      }
+      spokenUpToRef.current = 0
+    }, [queryClient, streamFinish, ttsEnqueue]),
     onError: useCallback(
       (messageText: string) => {
         const activeSend = activeSendRef.current
