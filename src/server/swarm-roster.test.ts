@@ -25,6 +25,30 @@ describe('swarm roster semantic workers', () => {
     expect(isSwarmWorkerId('../bad')).toBe(false)
   })
 
+  it('accepts a top-level worker array roster', () => {
+    const parsed = SwarmRosterSchema.parse([
+      {
+        id: 'support',
+        name: 'Support',
+        role: 'Support agent',
+        specialty: 'Customer support',
+        model: 'GPT-5.5',
+        mission: 'Handle inbound customer conversations.',
+        wrapper: 'support:task',
+        skills: ['support-core'],
+        capabilities: ['support'],
+        preferredTaskTypes: ['inbound'],
+        maxConcurrentTasks: 1,
+      },
+    ])
+
+    expect(parsed.version).toBe(1)
+    expect(parsed.workers[0]).toMatchObject({
+      id: 'support',
+      wrapper: 'support:task',
+    })
+  })
+
   it('preserves semantic roster metadata through parse', () => {
     const parsed = SwarmRosterSchema.parse({
       version: 1,

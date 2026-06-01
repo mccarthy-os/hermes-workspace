@@ -11,8 +11,15 @@ type ErrorEntry = {
   raw?: string
 }
 
-function classifyError(raw: string): string {
+export function classifyError(raw: string): string {
   const lower = raw.toLowerCase()
+  if (
+    lower.includes('session continuation') ||
+    lower.includes('x-hermes-session-id') ||
+    lower.includes('x-claude-session-id')
+  ) {
+    return 'Gateway session continuity needs API auth — set HERMES_API_TOKEN to match API_SERVER_KEY, then restart Workspace and the Hermes gateway'
+  }
   if (
     lower.includes('429') ||
     lower.includes('rate limit') ||

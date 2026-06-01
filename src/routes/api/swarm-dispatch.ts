@@ -157,7 +157,7 @@ function tmuxHasSession(tmuxBin: string, name: string): Promise<boolean> {
 
 async function tmuxSessionHasAlivePane(tmuxBin: string, name: string): Promise<boolean> {
   const result = await execFileAsync(tmuxBin, ['list-panes', '-t', name])
-  return result.ok && result.stdout && result.stdout.trim().length > 0
+  return Boolean(result.ok && result.stdout && result.stdout.trim().length > 0)
 }
 
 function execFileAsync(
@@ -946,7 +946,6 @@ function runWorker(assignment: AssignmentRequest, timeoutMs: number, roster: Swa
         timeout: timeoutMs,
         maxBuffer: MAX_OUTPUT_CHARS,
         killSignal: 'SIGTERM',
-        input: prompt,
       },
       (error, stdout, stderr) => {
         const durationMs = Date.now() - startedAt

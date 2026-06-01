@@ -51,6 +51,8 @@ type RuntimeEntry = {
   blockedReason: string | null
   lastCheckIn: string | null
   lastSummary: string | null
+  lastRealSummary: string | null
+  lastRealResult: string | null
   nextAction: string | null
   lastResult: string | null
   assignedTaskCount: number
@@ -214,8 +216,8 @@ async function buildEntry(
     role: roster?.role || runtime.role,
     specialty: roster?.specialty || null,
     mission: roster?.mission || null,
-    skills: roster.skills.length ? roster.skills : [],
-    capabilities: roster.capabilities.length ? roster.capabilities : [],
+    skills: roster?.skills ?? [],
+    capabilities: roster?.capabilities ?? [],
     source,
     pid: lifecycle.pid,
     startedAt: runtime.startedAt,
@@ -230,6 +232,8 @@ async function buildEntry(
     blockedReason: runtime.blockedReason,
     lastCheckIn: runtime.lastCheckIn,
     lastSummary: runtime.lastSummary,
+    lastRealSummary: runtime.lastRealSummary,
+    lastRealResult: runtime.lastRealResult,
     nextAction: runtime.nextAction,
     lastResult: runtime.lastResult,
     assignedTaskCount: runtime.assignedTaskCount,

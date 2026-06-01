@@ -287,7 +287,7 @@ export async function openaiChat(
   // If the gateway requires auth, _check_auth has already validated the
   // bearer above; when it does not, dropping these headers forces Hermes
   // Agent to derive a fresh api-* session from each message payload.
-  if (options.sessionId) {
+  if (options.sessionId && bearer) {
     headers['X-Hermes-Session-Id'] = options.sessionId
     // Back-compat for older/Claude-compatible adapters that still look for
     // the pre-Hermes header name.  Hermes Agent ignores this alias.

@@ -53,7 +53,7 @@ describe('openaiChat', () => {
     expect(headers['X-Claude-Session-Id']).toBe('workspace-session-1')
   })
 
-  it('sends Hermes session continuity headers even without a bearer token', async () => {
+  it('does not send Hermes session continuity headers without a bearer token', async () => {
     process.env.HOME = '/tmp/hermes-workspace-test-no-codex-auth'
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
@@ -70,8 +70,8 @@ describe('openaiChat', () => {
 
     const headers = fetchMock.mock.calls[0]?.[1]?.headers as Record<string, string>
     expect(headers.Authorization).toBeUndefined()
-    expect(headers['X-Hermes-Session-Id']).toBe('workspace-session-2')
-    expect(headers['X-Claude-Session-Id']).toBe('workspace-session-2')
+    expect(headers['X-Hermes-Session-Id']).toBeUndefined()
+    expect(headers['X-Claude-Session-Id']).toBeUndefined()
   })
 })
 
