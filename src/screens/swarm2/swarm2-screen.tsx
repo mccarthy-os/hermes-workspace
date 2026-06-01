@@ -1236,6 +1236,10 @@ export function Swarm2Screen() {
   // 1. Wired room workers (explicit user pick)
   // 2. All workers with an attachable tmux session OR an active runtime signal
   // 3. Single selected worker as last resort
+  // For any mounted roster worker that is not tmux-attachable yet, ask the
+  // server to idempotently create `swarm-<workerId>`. This closes the dynamic
+  // onboarding gap where newly added semantic agents rendered a terminal before
+  // the watcher had created their tmux session, producing "can't find pane/session".
   const autoMountTargets = useMemo(() => {
     if (roomIds.length) {
       return members.filter((member) => roomIds.includes(member.id))
@@ -1250,6 +1254,15 @@ export function Swarm2Screen() {
       ? members.filter((member) => member.id === selectedId)
       : []
   }, [members, roomIds, runtimeByWorker, selectedId])
+
+  useEffect(() => {
+    if (!tmuxAvailable || viewMode !== 'runtime') return
+    for (const member of autoMountTargets) {
+      const runtime = runtimeByWorker.get(member.id)
+      if (runtime?.tmuxAttachable || pendingTmux.has(member.id)) continue
+      void startAgentSession(member.id)
+    }
+  }, [autoMountTargets, pendingTmux, runtimeByWorker, startAgentSession, tmuxAvailable, viewMode])
   const terminalTargets = focusedRuntimeWorkerId
     ? autoMountTargets.filter((member) => member.id === focusedRuntimeWorkerId)
     : autoMountTargets

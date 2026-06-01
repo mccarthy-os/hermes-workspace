@@ -1,25 +1,53 @@
-# Hermes Workspace Agent Contract
+<!-- File 6 of 6 -- Install at: <hermes-workspace>/AGENTS.md (shared by the whole swarm) -->
 
-This workspace uses semantic Hermes swarm workers, not numbered-only lanes. The source of truth for routing is `swarm.yaml`; each worker also has a matching profile under `~/.hermes/profiles/<worker-id>/`, a role skill `<worker-id>-core`, and a wrapper in `~/.local/bin/`.
+# AGENTS.md -- Standard Agent Swarm
 
-## Current semantic roster
+This workspace uses **semantic Hermes swarm workers**, not numbered lanes. The source of truth
+for routing is `swarm.yaml`; each worker also has a profile under `~/.hermes/profiles/<id>/`, a
+core role skill `<id>-core`, and a wrapper in `~/.local/bin/`.
 
-| Worker | Wrapper | Tools | Skills | MCP | Plugins |
-|---|---|---|---|---|---|
-| `orchestrator` | `orchestrator:plan` | todo, kanban, delegation, terminal, file, gbrain, session_search, cronjob, skills, clarify, web | orchestrator-core, gstack-for-hermes, gbrain, kanban-orchestrator, subagent-driven-development, writing-plans, requesting-code-review, workspace-dispatch | gbrain | none |
-| `km-agent` | `km:health` | gbrain, file, terminal, session_search, skills, todo, cronjob, web | km-agent-core, gbrain, obsidian-markdown, obsidian-cli, obsidian-bases, json-canvas, gstack-for-hermes | gbrain | none |
-| `builder` | `builder:task` | terminal, file, browser, web, gbrain, session_search, skills, todo | builder-core, gstack-for-hermes, test-driven-development, systematic-debugging, github-pr-workflow, requesting-code-review, codebase-inspection | gbrain | none |
-| `reviewer` | `reviewer:gate` | terminal, file, web, gbrain, session_search, skills | reviewer-core, requesting-code-review, github-code-review, systematic-debugging, gstack-for-hermes, gbrain, codebase-inspection | gbrain | none |
-| `qa` | `qa:smoke` | browser, terminal, file, vision, gbrain, session_search, skills, web | qa-core, browser-harness-power-use, dogfood, gstack-for-hermes | gbrain | none |
-| `researcher` | `researcher:quick` | gbrain, web, browser, terminal, file, vision, session_search, skills, todo | researcher-core, gbrain, autoresearch, browser-harness-power-use, gstack-for-hermes, researcher-quick, researcher-autoresearch, arxiv, youtube-content, polymarket | gbrain | none |
-| `ops-watch` | `ops:health` | terminal, cronjob, file, gbrain, skills, session_search, web | ops-watch-core, gbrain, hermes-agent, systematic-debugging, webhook-subscriptions | gbrain | none |
-| `maintainer` | `maintainer:check` | terminal, file, web, browser, gbrain, session_search, skills | maintainer-core, github-repo-management, github-pr-workflow, github-issues, github-code-review, gbrain, gstack-for-hermes, hermes-agent | gbrain | none |
-| `strategist` | `strategist:review` | gbrain, web, session_search, file, skills, todo, clarify | strategist-core, gstack-for-hermes, gbrain, writing-plans, polymarket | gbrain | none |
-| `inbox-triage` | `inbox:triage` | gbrain, web, file, session_search, todo, skills, terminal | inbox-triage-core, gbrain, obsidian-markdown, gstack-for-hermes, defuddle, youtube-content | gbrain | none |
+**Operating rule:** the **Orchestrator** decomposes, routes, and enforces greenlight, and is also
+the **Team Manager** that runs the weekly rhythm; the functional agents do the work;
+**Intelligence** reports and recommends but does not dispatch. Coordination is the Kanban board --
+"done" means a `kanban_complete(summary, proof)` row, not a verbal claim. *If the Orchestrator is
+writing copy, buying ads, or drafting a quote, the spec failed -- that is a worker's job.*
 
-## Operating rules
+**Standard, brand-neutral setup.** These agents ship generic. On a new install, the first action
+is a **business interview** that establishes the business name, brand voice, products, pricing
+rules, policies, and the per-agent integrations. Agents read business config from that interview;
+it is never hardcoded here.
 
-- Keep `swarm.yaml`, profile `config.yaml`, profile core skills, and wrappers aligned when changing a worker.
-- Prefer GBrain-first lookup for context-sensitive RAZSOC/Hermes/workflow decisions.
-- Builder implements; Reviewer gates; QA verifies behavior; Orchestrator routes and enforces greenlight.
-- Do not enable optional Hermes plugins globally unless the task explicitly needs them; record plugin/toolset alignment in `swarm.yaml` first.
+## Roster
+
+| Worker | Wrapper | Owns (one line) | Gate |
+|---|---|---|---|
+| **orchestrator** | `orchestrator:plan` | Decompose, route, run the board and weekly rhythm, hold the greenlight | enforces merge / publish / destructive / external-send / credential-change |
+| **support** | `support:task` | All inbound customer conversations across every channel | external sends |
+| **sales** | `sales:task` | Quoting, follow-up, deal closing | external sends |
+| **marketing** | `marketing:task` | All outbound marketing -- content, campaigns, email/social drafts, paid-media setup, and performance reporting | paid-spend / publish / external-send / new-channel-launch |
+| **finance** | `finance:task` | Bookkeeping, invoicing, reconciliation, financial reporting | **payment + bank action (permanent)** |
+| **operations** | `operations:task` | Inventory, supplier coordination, materials | **reorder + purchase order (permanent)** |
+| **design** | `design:task` | Visual and creative asset creation | -- |
+| **intelligence** | `intelligence:task` | Data analysis, reporting, trend detection, alerts; does not dispatch | -- |
+| **production** | `production:task` | Production workflow management and dispatch coordination | -- |
+
+A worker's toolsets, skills, and integrations are defined when that worker is built and configured
+per business at install. For physical-fulfilment businesses, `production` directs a human team
+(make, finish, QC, pack, ship); for service businesses that becomes a service-delivery team; for
+pure-digital businesses it does not exist.
+
+## Permanent owner gates
+
+- **Money never moves autonomously.** Finance can draft, categorize, and reconcile, but payment
+  and bank actions are a permanent owner greenlight at all levels.
+- **Purchase orders are owner-placed.** Operations can threshold, draft supplier emails, and
+  forecast, but reorder and purchase-order placement are a permanent owner greenlight at all levels.
+- Publishing, paid-ad spend, external sends, merges, destructive actions, and credential changes
+  are greenlight-gated. The Orchestrator routes to the gated agent knowing the gate exists; it
+  never approves or bypasses another agent's gate.
+
+## Build order
+
+1. **orchestrator** -- the brain; also the Team Manager. Build first.
+2. **support** -- narrowest scope, first real test of the pattern.
+3. then **sales -> marketing -> finance -> operations -> design -> intelligence -> production**.

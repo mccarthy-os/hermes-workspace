@@ -41,15 +41,42 @@ if "sessions" in table_names:
         "started_at" if "started_at" in session_cols
         else ("created_at" if "created_at" in session_cols else None)
     )
-    order_clause = "ORDER BY " + started_col + " DESC" if started_col else ""
-    select_cols = ["id"]
+    select_cols = ["s.id"]
     if title_col:
-        select_cols.append(title_col)
-    if started_col:
-        select_cols.append(started_col)
-    row = cur.execute(
-        "SELECT " + ", ".join(select_cols) + " FROM sessions " + order_clause + " LIMIT 1"
-    ).fetchone()
+        select_cols.append("s." + title_col)
+
+    # Pick the session with the newest message activity, not the newest
+    # session start time. Swarm workers can have a long-lived TUI session
+    # plus newer one-shot CLI dispatch sessions; ordering by started_at can
+    # hide the active TUI conversation behind stale CLI output.
+    row = None
+    if "messages" in table_names:
+        msg_cols = {row[1] for row in cur.execute("PRAGMA table_info(messages)").fetchall()}
+        msg_ts_col = (
+            "created_at" if "created_at" in msg_cols
+            else ("timestamp" if "timestamp" in msg_cols
+                  else ("started_at" if "started_at" in msg_cols else None))
+        )
+        if "session_id" in msg_cols:
+            activity_expr = "MAX(m." + msg_ts_col + ")" if msg_ts_col else "MAX(m.rowid)"
+            row = cur.execute(
+                "SELECT " + ", ".join(select_cols) + ", " + activity_expr + " AS last_activity"
+                + " FROM sessions s JOIN messages m ON m.session_id = s.id"
+                + " GROUP BY s.id ORDER BY last_activity DESC LIMIT 1"
+            ).fetchone()
+
+    # Fallback for empty/new profiles: use the newest session metadata.
+    if row is None:
+        fallback_cols = ["id"]
+        if title_col:
+            fallback_cols.append(title_col)
+        if started_col:
+            fallback_cols.append(started_col)
+        order_clause = "ORDER BY " + started_col + " DESC" if started_col else ""
+        row = cur.execute(
+            "SELECT " + ", ".join(fallback_cols) + " FROM sessions " + order_clause + " LIMIT 1"
+        ).fetchone()
+
     if row is not None:
         session_id = row["id"]
         if title_col:

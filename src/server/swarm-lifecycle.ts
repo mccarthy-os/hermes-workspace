@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path'
 import { getProfilesDir } from './claude-paths'
 import { SWARM_MEMORY_ROOT } from './swarm-environment'
 import { appendSwarmMemoryEvent } from './swarm-memory'
+import { getSwarmWrapperPath } from './swarm-foundation'
 
 export type SwarmContextState = 'healthy' | 'watch' | 'handoff_required' | 'renew_required'
 
@@ -142,8 +143,25 @@ export function getSwarmLifecycleStatus(workerId: string, policy = DEFAULT_POLIC
 }
 
 function tmuxBin(): string {
-  const local = join(homedir(), '.local', 'bin', 'tmux')
-  return existsSync(local) ? local : 'tmux'
+  const candidates = [
+    process.env.TMUX_BIN,
+    process.env.HERMES_TMUX_BIN,
+    process.env.CLAUDE_TMUX_BIN,
+    join(homedir(), '.local', 'bin', 'tmux'),
+    '/usr/bin/tmux',
+    '/bin/tmux',
+    '/opt/homebrew/bin/tmux',
+    '/usr/local/bin/tmux',
+    'tmux',
+  ].filter((value): value is string => Boolean(value))
+  for (const candidate of candidates) {
+    if (candidate.includes('/')) {
+      if (existsSync(candidate)) return candidate
+      continue
+    }
+    return candidate
+  }
+  return 'tmux'
 }
 
 function sendTmux(workerId: string, prompt: string): Promise<{ ok: boolean; error?: string }> {
@@ -230,7 +248,7 @@ function tmuxKill(workerId: string): Promise<{ ok: boolean; error?: string }> {
 
 function tmuxStart(workerId: string): Promise<{ ok: boolean; error?: string }> {
   const session = `swarm-${workerId}`
-  const wrapper = join(homedir(), '.local', 'bin', workerId)
+  const wrapper = getSwarmWrapperPath(workerId)
   if (!existsSync(wrapper)) return Promise.resolve({ ok: false, error: `Wrapper not found: ${wrapper}` })
   return new Promise((resolve) => {
     execFile(tmuxBin(), ['new-session', '-d', '-s', session, wrapper], (err, _out, stderr) => {

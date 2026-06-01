@@ -155,6 +155,11 @@ function tmuxHasSession(tmuxBin: string, name: string): Promise<boolean> {
   })
 }
 
+async function tmuxSessionHasAlivePane(tmuxBin: string, name: string): Promise<boolean> {
+  const result = await execFileAsync(tmuxBin, ['list-panes', '-t', name])
+  return result.ok && result.stdout && result.stdout.trim().length > 0
+}
+
 function execFileAsync(
   cmd: string,
   args: Array<string>,
@@ -574,6 +579,27 @@ function resolveWorkerCwd(workerId: string): string {
   return homedir()
 }
 
+export function buildWorkerOneshotFallbackInvocation(input: {
+  useWrapper: boolean
+  wrapperPath: string
+  hermesBin: string
+  prompt: string
+}): { cmd: string; args: Array<string> } {
+  if (input.useWrapper) {
+    // Semantic swarm wrappers (for example `support:task`) already encode the
+    // profile/toolset and expect their positional arguments to be the prompt:
+    //   exec hermes --profile support --toolsets kanban -z "$@"
+    // Passing `chat -q ...` through those wrappers makes `chat` become the -z
+    // prompt and the real prompt become stray argv, causing Hermes to parse the
+    // prompt text as a subcommand (for example: invalid choice: 'swarm-dispatch').
+    return { cmd: input.wrapperPath, args: [input.prompt] }
+  }
+  return {
+    cmd: input.hermesBin,
+    args: ['chat', '-q', '-Q', '--yolo', '--ignore-rules', '--source', 'swarm-dispatch', input.prompt],
+  }
+}
+
 async function captureTmuxPane(tmuxBin: string, sessionName: string): Promise<string> {
   const captured = await execFileAsync(tmuxBin, ['capture-pane', '-p', '-t', sessionName, '-S', '-200'], 8_000)
   return captured.ok ? captured.stdout.trim() : ''
@@ -591,7 +617,14 @@ async function ensureLiveTmuxSession(workerId: string): Promise<{ ok: true; tmux
 
   const sessionName = sessionNameFor(workerId)
   if (await tmuxHasSession(tmuxBin, sessionName)) {
-    return { ok: true, tmuxBin, sessionName }
+    // Check that the session has at least one alive pane; if not, kill it and recreate
+    const hasAlivePane = await tmuxSessionHasAlivePane(tmuxBin, sessionName)
+    if (hasAlivePane) {
+      return { ok: true, tmuxBin, sessionName }
+    } else {
+      // Dead session (no panes) — clean up before recreating
+      await execFileAsync(tmuxBin, ['kill-session', '-t', sessionName])
+    }
   }
 
   const profilePath = getProfilePath(workerId)
@@ -886,10 +919,14 @@ function runWorker(assignment: AssignmentRequest, timeoutMs: number, roster: Swa
     }
 
     const useWrapper = existsSync(wrapperPath)
-    const cmd = useWrapper ? wrapperPath : resolveHermesBin()
-    const args = useWrapper
-      ? ['chat', '-q', '-Q', '--yolo', '--ignore-rules', '--source', 'swarm-dispatch', prompt]
-      : ['chat', '-q', '-Q', '--yolo', '--ignore-rules', '--source', 'swarm-dispatch']
+    const fallbackInvocation = buildWorkerOneshotFallbackInvocation({
+      useWrapper,
+      wrapperPath,
+      hermesBin: resolveHermesBin(),
+      prompt,
+    })
+    const cmd = fallbackInvocation.cmd
+    const args = fallbackInvocation.args
     const env: NodeJS.ProcessEnv = {
       ...process.env,
       HERMES_HOME: profilePath,

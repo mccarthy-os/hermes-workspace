@@ -40,27 +40,20 @@ type StartRequest = {
 
 const TMUX_BIN_CANDIDATES = [
   process.env.TMUX_BIN,
+  process.env.HERMES_TMUX_BIN,
+  process.env.CLAUDE_TMUX_BIN,
+  join(homedir(), '.local', 'bin', 'tmux'),
   '/opt/homebrew/bin/tmux',
   '/usr/local/bin/tmux',
-  join(homedir(), '.local', 'bin', 'tmux'),
+  '/usr/bin/tmux',
+  '/bin/tmux',
   'tmux',
 ].filter((value): value is string => Boolean(value))
 
 function resolveTmuxBin(): string | null {
   for (const candidate of TMUX_BIN_CANDIDATES) {
     if (candidate.includes('/')) {
-      // On this launchd-started Workspace, existsSync can incorrectly miss
-      // Homebrew binaries and then execFile('tmux') fails with ENOENT because
-      // PATH has been reshaped by pnpm. Prefer the stable absolute Homebrew
-      // paths; execFile will surface a clear error if they truly do not exist.
-      if (
-        candidate === process.env.TMUX_BIN ||
-        candidate === '/opt/homebrew/bin/tmux' ||
-        candidate === '/usr/local/bin/tmux' ||
-        existsSync(candidate)
-      ) {
-        return candidate
-      }
+      if (existsSync(candidate)) return candidate
       continue
     }
     return candidate
@@ -244,6 +237,12 @@ export const Route = createFileRoute('/api/swarm-tmux-start')({
           })
         }
 
+        // Dynamic onboarding safety net: if a new roster worker is opened in
+        // the Swarm UI before its watcher has created the long-lived tmux
+        // session, create it right here instead of handing the browser a
+        // doomed `tmux attach -t swarm-<id>` command. This keeps startup
+        // idempotent and makes newly added semantic agents attachable on first
+        // use.
         const cwd = resolveWorkerCwd(workerId)
         const result = await startSession(
           tmuxBin,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildHermesTmuxLaunchCommand,
+  buildWorkerOneshotFallbackInvocation,
   buildWorkerPrompt,
   checkpointFromRuntimeSnapshot,
   runtimeCheckpointSignature,
@@ -109,6 +110,43 @@ describe('buildHermesTmuxLaunchCommand', () => {
   })
 })
 
+describe('buildWorkerOneshotFallbackInvocation', () => {
+  it('passes only the prompt to semantic swarm wrappers', () => {
+    const invocation = buildWorkerOneshotFallbackInvocation({
+      useWrapper: true,
+      wrapperPath: '/home/ubuntu/.local/bin/support:task',
+      hermesBin: '/home/ubuntu/.hermes/hermes-agent/venv/bin/hermes',
+      prompt: '## Swarm Orchestrator Dispatch\nWorker: Support\nMachine ID: support',
+    })
+
+    expect(invocation.cmd).toBe('/home/ubuntu/.local/bin/support:task')
+    expect(invocation.args).toEqual(['## Swarm Orchestrator Dispatch\nWorker: Support\nMachine ID: support'])
+    expect(invocation.args).not.toContain('chat')
+    expect(invocation.args).not.toContain('swarm-dispatch')
+  })
+
+  it('uses hermes chat arguments when no semantic wrapper exists', () => {
+    const invocation = buildWorkerOneshotFallbackInvocation({
+      useWrapper: false,
+      wrapperPath: '/missing/wrapper',
+      hermesBin: '/home/ubuntu/.hermes/hermes-agent/venv/bin/hermes',
+      prompt: 'Reply with WORKER_OK',
+    })
+
+    expect(invocation.cmd).toBe('/home/ubuntu/.hermes/hermes-agent/venv/bin/hermes')
+    expect(invocation.args).toEqual([
+      'chat',
+      '-q',
+      '-Q',
+      '--yolo',
+      '--ignore-rules',
+      '--source',
+      'swarm-dispatch',
+      'Reply with WORKER_OK',
+    ])
+  })
+})
+
 describe('buildWorkerPrompt', () => {
   const roster = {
     id: 'swarm5',
@@ -117,9 +155,16 @@ describe('buildWorkerPrompt', () => {
     specialty: 'full-stack implementation across Hermes Workspace and Swarm2',
     model: 'GPT-5.5',
     mission: 'Ship focused product slices with tests and clean diffs.',
+    modes: ['task'],
+    tools: ['terminal', 'file'],
     skills: ['swarm-ui-worker', 'swarm-worker-core'],
+    plugins: [],
+    pluginToolsets: [],
+    mcpServers: [],
+    wrapper: 'swarm5:task',
     capabilities: ['code-editing', 'ui-implementation', 'build-verification'],
     preferredTaskTypes: ['implementation'],
+    greenlightRequiredFor: [],
     maxConcurrentTasks: 1,
     acceptsBroadcast: true,
     reviewRequired: false,

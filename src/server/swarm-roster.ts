@@ -41,10 +41,23 @@ export const SwarmRosterWorkerSchema = z.object({
   reviewRequired: z.boolean().default(false),
 })
 
-export const SwarmRosterSchema = z.object({
+export const SwarmRosterObjectSchema = z.object({
   version: z.number().int().positive().default(1),
   workers: z.array(SwarmRosterWorkerSchema).default([]),
 })
+
+// Accept both canonical `{ version, workers }` rosters and the legacy/plain
+// top-level worker array that the Agent Framework currently writes. Without
+// this, a valid `swarm.yaml` like `- id: support ... wrapper: support:task`
+// falls through to fallbackRoster(), losing wrapper/profile metadata and making
+// dynamic tmux startup look for `/home/ubuntu/.local/bin/support` instead of
+// `/home/ubuntu/.local/bin/support:task`.
+export const SwarmRosterSchema = z.preprocess((value) => {
+  if (Array.isArray(value)) {
+    return { version: 1, workers: value }
+  }
+  return value
+}, SwarmRosterObjectSchema)
 
 export type SwarmRosterWorker = z.infer<typeof SwarmRosterWorkerSchema>
 export type SwarmRoster = z.infer<typeof SwarmRosterSchema>

@@ -94,17 +94,40 @@ function lastLogTail(
   }
 }
 
+const TMUX_BIN_CANDIDATES = [
+  process.env.TMUX_BIN,
+  process.env.HERMES_TMUX_BIN,
+  process.env.CLAUDE_TMUX_BIN,
+  '/home/ubuntu/.local/bin/tmux',
+  '/opt/homebrew/bin/tmux',
+  '/usr/local/bin/tmux',
+  '/usr/bin/tmux',
+  '/bin/tmux',
+  'tmux',
+].filter((value): value is string => Boolean(value))
+
+function resolveTmuxBin(): string | null {
+  for (const candidate of TMUX_BIN_CANDIDATES) {
+    if (candidate.includes('/')) {
+      if (existsSync(candidate)) return candidate
+      continue
+    }
+    return candidate
+  }
+  return null
+}
+
 function tmuxHasSession(name: string): Promise<boolean> {
+  const bin = resolveTmuxBin()
+  if (!bin) return Promise.resolve(false)
   return new Promise((resolve) => {
-    execFile('tmux', ['has-session', '-t', name], (error) => resolve(!error))
+    execFile(bin, ['has-session', '-t', name], (error) => resolve(!error))
   })
 }
 
 function tmuxIsInstalled(): Promise<boolean> {
-  // Honour HERMES_TMUX_BIN so a custom-path install isn't reported as
-  // 'tmux not installed' just because PATH doesn't include it. See #244.
-  const bin =
-    process.env.HERMES_TMUX_BIN || process.env.CLAUDE_TMUX_BIN || 'tmux'
+  const bin = resolveTmuxBin()
+  if (!bin) return Promise.resolve(false)
   return new Promise((resolve) => {
     execFile(bin, ['-V'], (error) => resolve(!error))
   })
