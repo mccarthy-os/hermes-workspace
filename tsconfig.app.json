@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "vite.config.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "e2e/**",
+    "playground-ws-worker/**",
+    "node_modules/**",
+    "dist/**",
+    "dist-ssr/**",
+    "build/**"
+  ]
+}

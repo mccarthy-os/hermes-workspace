@@ -24,7 +24,12 @@
     "electron:build": "pnpm build && pnpm electron:bundle-server && electron-builder --config electron-builder.config.cjs",
     "electron:build:mac": "pnpm build && pnpm electron:bundle-server && electron-builder --mac --config electron-builder.config.cjs",
     "electron:build:win": "pnpm build && pnpm electron:bundle-server && electron-builder --win --config electron-builder.config.cjs",
-    "electron:bundle-server": "esbuild dist/server/server.js --bundle --platform=node --format=cjs --outfile=electron/server-bundle.cjs"
+    "electron:bundle-server": "esbuild dist/server/server.js --bundle --platform=node --format=cjs --outfile=electron/server-bundle.cjs",
+    "typecheck": "pnpm run typecheck:app && pnpm run typecheck:test && pnpm run typecheck:e2e && pnpm run typecheck:worker",
+    "typecheck:app": "tsc --noEmit -p tsconfig.app.json",
+    "typecheck:test": "tsc --noEmit -p tsconfig.test.json",
+    "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json",
+    "typecheck:worker": "tsc --noEmit -p playground-ws-worker/tsconfig.json"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
@@ -82,6 +87,8 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260531.1",
+    "@playwright/test": "^1.60.0",
     "@tanstack/eslint-config": "0.3.4",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
