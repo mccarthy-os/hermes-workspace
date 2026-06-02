@@ -266,13 +266,23 @@ def start_worker(
     log_dir.mkdir(parents=True, exist_ok=True)
     worker_log = log_dir / f"swarm-watchdog-{worker_id}.log"
 
-    # Match the Workspace API behavior: a long-lived Hermes TUI in the worker's
-    # profile. HERMES_HOME selects the profile; HERMES_CLI_BIN keeps wrappers and
-    # children on the known-good installed binary.
+    # Match the Workspace direct-chat behavior: keep a long-lived classic Hermes
+    # chat prompt in the worker profile. Do not start the newer --tui here: the
+    # Workspace direct-chat route sends prompts through tmux paste/send-keys, and
+    # TUI panes can accept visible text without submitting it, leaving the UI
+    # stuck on "thinking". HERMES_HOME selects the profile; HERMES_CLI_BIN keeps
+    # wrappers and children on the known-good installed binary.
+    quoted_hermes = shlex.quote(hermes_bin)
+    quoted_log = shlex.quote(str(worker_log))
     shell_command = (
         f"export HERMES_HOME={shlex.quote(str(profile_path))}; "
-        f"export HERMES_CLI_BIN={shlex.quote(hermes_bin)}; "
-        f"exec {shlex.quote(hermes_bin)} chat --tui >> {shlex.quote(str(worker_log))} 2>&1"
+        f"export HERMES_CLI_BIN={quoted_hermes}; "
+        # Prefer continuity for profiles that already have a CLI session, but fall
+        # back to a fresh classic chat for newly commissioned workers. Without the
+        # fallback, brand-new profiles exit immediately with 'No previous CLI
+        # session found to continue' and the watchdog loops forever.
+        f"{quoted_hermes} chat --continue >> {quoted_log} 2>&1 || "
+        f"exec {quoted_hermes} chat >> {quoted_log} 2>&1"
     )
     argv = [tmux_bin, "new-session", "-d", "-s", session, "-c", str(cwd), shell_command]
 

@@ -23,19 +23,19 @@ it is never hardcoded here.
 |---|---|---|---|
 | **orchestrator** | `orchestrator:plan` | Decompose, route, run the board and weekly rhythm, hold the greenlight | enforces merge / publish / destructive / external-send / credential-change |
 | **support** | `support:task` | All inbound customer conversations across every channel | external sends |
-| **sales** | `sales:task` | Quoting, follow-up, deal closing | external sends |
 | **marketing** | `marketing:task` | All outbound marketing -- content, campaigns, email/social drafts, paid-media setup, and performance reporting | paid-spend / publish / external-send / new-channel-launch |
-| **finance** | `finance:task` | Bookkeeping, invoicing, reconciliation, financial reporting | **payment + bank action (permanent)** |
-| **operations** | `operations:task` | Inventory, supplier coordination, materials | **reorder + purchase order (permanent)** |
-| **design** | `design:task` | Visual and creative asset creation | -- |
-| **intelligence** | `intelligence:task` | Data analysis, reporting, trend detection, alerts; does not dispatch | -- |
-| **production** | `production:task` | Production workflow management and dispatch coordination | -- |
+| **builder** | `builder:task` | Scoped code changes and implementation work | merge / destructive / external-send / credential-change |
+| **inbox-triage** | `inbox-triage:task` | Inbound message classification and internal routing | external-send / escalation-to-human / credential-change |
+| **km-agent** | `km-agent:task` | Internal knowledge base updates and source-backed reusable notes | publish / external-send / credential-change |
+| **maintainer** | `maintainer:task` | Routine maintenance and small safe patches | merge / destructive / credential-change / service-restart |
+| **ops-watch** | `ops-watch:task` | Health checks, log review, and incident summaries | service-restart / destructive / credential-change / external-send |
+| **qa** | `qa:task` | Testing, reproduction, and verification proof | destructive / external-send / credential-change |
+| **researcher** | `researcher:task` | Source-backed research and summaries | external-send / publish / credential-change |
+| **reviewer** | `reviewer:task` | Code review and approval recommendations | merge / destructive / external-send / credential-change |
+| **strategist** | `strategist:task` | Strategic analysis, options, and recommendation briefs | publish / external-send / paid-spend / credential-change |
+| **intelligence** | `intelligence:task` | Cross-channel synthesis, dashboards, anomaly alerts, competitor/industry research, and recommendation memos; does not dispatch | external-send / publish / credential-change / cross-worker-dispatch |
 
-A worker's toolsets, skills, and integrations are defined when that worker is built and configured
-per business at install. For physical-fulfilment businesses, `production` directs a human team
-(make, finish, QC, pack, ship); for service businesses that becomes a service-delivery team; for
-pure-digital businesses it does not exist.
-
+A worker's toolsets, skills, and integrations are defined in `swarm.yaml`, the profile config, and the worker core skill. Orchestrator remains the single Team Manager/router; functional workers do their specialist work through Kanban and preserve owner gates.
 ## Permanent owner gates
 
 - **Money never moves autonomously.** Finance can draft, categorize, and reconcile, but payment

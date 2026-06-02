@@ -173,9 +173,18 @@ async function sendPromptToLiveSession(workerId: string, prompt: string): Promis
   const pasted = await execFileAsync(tmuxBin, ['paste-buffer', '-d', '-b', bufferName, '-t', sessionName])
   if (!pasted.ok) return { ok: false, error: pasted.error }
 
-  await sleep(120)
-  const entered = await execFileAsync(tmuxBin, ['send-keys', '-t', sessionName, 'Enter'])
+  // prompt_toolkit-backed Hermes TUIs are more reliable with C-m than the
+  // literal tmux "Enter" key name, especially when the pane is attached through
+  // xterm.js. Send a second carriage return after a short delay to cover the
+  // common failure mode where the prompt is pasted but remains sitting in the
+  // input buffer, leaving the Workspace UI stuck on "thinking" until timeout.
+  await sleep(2000)
+  const entered = await execFileAsync(tmuxBin, ['send-keys', '-t', sessionName, 'C-m'])
   if (!entered.ok) return { ok: false, error: entered.error }
+
+  await sleep(1000)
+  const confirmEntered = await execFileAsync(tmuxBin, ['send-keys', '-t', sessionName, 'C-m'])
+  if (!confirmEntered.ok) return { ok: false, error: confirmEntered.error }
 
   return { ok: true, delivery: 'tmux' }
 }

@@ -132,3 +132,401 @@
   acceptsBroadcast: false
   mcpServers: []
   wrapper: marketing:task
+- id: builder
+  name: Builder
+  role: Scoped Implementation Agent
+  specialty: code implementation, refactoring, bug fixing, small feature delivery
+  model: GPT-5.5
+  mission: Implement scoped code changes from Orchestrator-approved tasks, keep changes reviewable, and return concrete proof
+    without merging or deploying.
+  profile: builder
+  modes:
+  - task
+  tools:
+  - kanban
+  - skills
+  - memory
+  - terminal
+  - file
+  - web
+  skills:
+  - builder-core
+  - kanban-worker
+  capabilities:
+  - implementation
+  - refactoring
+  - bug-fixing
+  - feature-work
+  preferredTaskTypes:
+  - implementation
+  - bug-fix
+  - refactor
+  - code-change
+  greenlightRequiredFor:
+  - merge
+  - destructive
+  - external-send
+  - credential-change
+  maxConcurrentTasks: 1
+  acceptsBroadcast: false
+  mcpServers: []
+  wrapper: builder:task
+- id: inbox-triage
+  name: Inbox Triage
+  role: Inbound Message Classifier
+  specialty: message triage, priority classification, routing, escalation packaging
+  model: GPT-5.5
+  mission: Classify inbound messages, identify priority and owner, route work to the correct worker, and avoid sending external
+    replies without approval.
+  profile: inbox-triage
+  modes:
+  - task
+  tools:
+  - kanban
+  - skills
+  - memory
+  - file
+  - web
+  skills:
+  - inbox-triage-core
+  - kanban-worker
+  capabilities:
+  - triage
+  - classification
+  - routing
+  - escalation-packaging
+  preferredTaskTypes:
+  - inbox
+  - triage
+  - classification
+  - routing
+  - customer-message
+  greenlightRequiredFor:
+  - external-send
+  - escalation-to-human
+  - credential-change
+  maxConcurrentTasks: 1
+  acceptsBroadcast: false
+  mcpServers: []
+  wrapper: inbox-triage:task
+- id: km-agent
+  name: KM Agent
+  role: Knowledge Base Maintainer
+  specialty: knowledge base hygiene, documentation, reusable answers, source tracking
+  model: GPT-5.5
+  mission: Maintain clean internal knowledge, turn resolved work into reusable notes, and preserve source-backed answers for
+    the team.
+  profile: km-agent
+  modes:
+  - task
+  tools:
+  - kanban
+  - skills
+  - memory
+  - file
+  - web
+  - session_search
+  skills:
+  - km-agent-core
+  - kanban-worker
+  capabilities:
+  - knowledge-management
+  - documentation
+  - source-tracking
+  - reuse
+  preferredTaskTypes:
+  - knowledge-base
+  - documentation
+  - kb-update
+  - policy-note
+  greenlightRequiredFor:
+  - publish
+  - external-send
+  - credential-change
+  maxConcurrentTasks: 1
+  acceptsBroadcast: false
+  mcpServers: []
+  wrapper: km-agent:task
+- id: maintainer
+  name: Maintainer
+  role: Maintenance Agent
+  specialty: dependency checks, small patches, housekeeping, repository hygiene
+  model: GPT-5.5
+  mission: Handle safe maintenance tasks, dependency checks, and housekeeping while holding destructive or merge actions behind
+    owner greenlight.
+  profile: maintainer
+  modes:
+  - task
+  tools:
+  - kanban
+  - skills
+  - memory
+  - terminal
+  - file
+  - web
+  skills:
+  - maintainer-core
+  - kanban-worker
+  capabilities:
+  - maintenance
+  - dependency-checks
+  - housekeeping
+  - small-patches
+  preferredTaskTypes:
+  - maintenance
+  - dependency
+  - cleanup
+  - housekeeping
+  greenlightRequiredFor:
+  - merge
+  - destructive
+  - credential-change
+  - service-restart
+  maxConcurrentTasks: 1
+  acceptsBroadcast: false
+  mcpServers: []
+  wrapper: maintainer:task
+- id: ops-watch
+  name: Ops Watch
+  role: Systems Health Monitor
+  specialty: service health, logs, uptime, watchdog checks, incident summaries
+  model: GPT-5.5
+  mission: Monitor local service health, inspect logs, summarize incidents, and recommend fixes without taking owner-level
+    operational actions.
+  profile: ops-watch
+  modes:
+  - task
+  tools:
+  - kanban
+  - skills
+  - memory
+  - terminal
+  - file
+  - web
+  - cronjob
+  skills:
+  - ops-watch-core
+  - kanban-worker
+  capabilities:
+  - monitoring
+  - health-checks
+  - log-review
+  - incident-summary
+  preferredTaskTypes:
+  - health-check
+  - monitoring
+  - incident
+  - ops
+  greenlightRequiredFor:
+  - service-restart
+  - destructive
+  - credential-change
+  - external-send
+  maxConcurrentTasks: 1
+  acceptsBroadcast: false
+  mcpServers: []
+  wrapper: ops-watch:task
+- id: qa
+  name: QA
+  role: Verification Agent
+  specialty: smoke tests, regression checks, acceptance proof, bug reproduction
+  model: GPT-5.5
+  mission: Verify behavior against acceptance criteria, reproduce bugs, and return concise proof without changing product
+    scope.
+  profile: qa
+  modes:
+  - task
+  tools:
+  - kanban
+  - skills
+  - memory
+  - terminal
+  - file
+  - web
+  - browser
+  skills:
+  - qa-core
+  - kanban-worker
+  capabilities:
+  - testing
+  - smoke-tests
+  - regression
+  - bug-reproduction
+  - acceptance-proof
+  preferredTaskTypes:
+  - qa
+  - test
+  - smoke
+  - regression
+  - verification
+  greenlightRequiredFor:
+  - destructive
+  - external-send
+  - credential-change
+  maxConcurrentTasks: 1
+  acceptsBroadcast: false
+  mcpServers: []
+  wrapper: qa:task
+- id: researcher
+  name: Researcher
+  role: Research Agent
+  specialty: web research, source comparison, market and technical reconnaissance
+  model: GPT-5.5
+  mission: Gather source-backed information, compare options, and produce cited summaries for Orchestrator-routed questions.
+  profile: researcher
+  modes:
+  - task
+  tools:
+  - kanban
+  - skills
+  - memory
+  - file
+  - web
+  - session_search
+  skills:
+  - researcher-core
+  - kanban-worker
+  capabilities:
+  - research
+  - source-review
+  - comparison
+  - reconnaissance
+  preferredTaskTypes:
+  - research
+  - market-research
+  - technical-research
+  - source-summary
+  greenlightRequiredFor:
+  - external-send
+  - publish
+  - credential-change
+  maxConcurrentTasks: 1
+  acceptsBroadcast: false
+  mcpServers: []
+  wrapper: researcher:task
+- id: reviewer
+  name: Reviewer
+  role: Code Review Gate
+  specialty: code review, risk assessment, security and maintainability checks
+  model: GPT-5.5
+  mission: Review proposed code changes, identify risks, request fixes, and provide approval recommendations without merging.
+  profile: reviewer
+  modes:
+  - task
+  tools:
+  - kanban
+  - skills
+  - memory
+  - terminal
+  - file
+  - web
+  skills:
+  - reviewer-core
+  - kanban-worker
+  capabilities:
+  - code-review
+  - risk-assessment
+  - security-review
+  - maintainability
+  preferredTaskTypes:
+  - review
+  - code-review
+  - gate
+  - risk-check
+  greenlightRequiredFor:
+  - merge
+  - destructive
+  - external-send
+  - credential-change
+  maxConcurrentTasks: 1
+  acceptsBroadcast: false
+  mcpServers: []
+  wrapper: reviewer:task
+- id: strategist
+  name: Strategist
+  role: Planning Advisor
+  specialty: strategy, prioritization, tradeoff analysis, roadmaps, decision briefs
+  model: GPT-5.5
+  mission: Turn goals and constraints into practical options, tradeoffs, and recommended next steps while leaving execution
+    to routed workers.
+  profile: strategist
+  modes:
+  - task
+  tools:
+  - kanban
+  - skills
+  - memory
+  - file
+  - web
+  - session_search
+  - todo
+  skills:
+  - strategist-core
+  - kanban-worker
+  capabilities:
+  - strategy
+  - prioritization
+  - planning
+  - decision-briefs
+  preferredTaskTypes:
+  - strategy
+  - planning
+  - roadmap
+  - decision-brief
+  greenlightRequiredFor:
+  - publish
+  - external-send
+  - paid-spend
+  - credential-change
+  maxConcurrentTasks: 1
+  acceptsBroadcast: false
+  mcpServers: []
+  wrapper: strategist:task
+- id: intelligence
+  name: Intelligence
+  role: Data and Research Layer
+  specialty: cross-channel synthesis, anomaly detection, dashboards, competitor and industry research, customer-voice synthesis,
+    recommendation memos
+  model: GPT-5.5
+  mission: Synthesize available cross-channel performance data and strategic research into dashboards, anomaly alerts, and
+    recommendation memos -- reporting and recommending only; never dispatching to other workers. Business-specific brand,
+    competitor, benchmark, voice, cadence, and integration config is deferred until all agents are live.
+  profile: intelligence
+  modes:
+  - task
+  tools:
+  - kanban
+  - skills
+  - memory
+  - file
+  - web
+  skills:
+  - intelligence-core
+  - kanban-worker
+  capabilities:
+  - synthesis
+  - analytics
+  - anomaly-detection
+  - dashboards
+  - competitor-research
+  - industry-research
+  - customer-voice
+  - recommendation-memos
+  preferredTaskTypes:
+  - analysis
+  - dashboard
+  - anomaly
+  - customer-voice
+  - competitor-research
+  - industry-research
+  - niche-research
+  - recommendation
+  greenlightRequiredFor:
+  - external-send
+  - publish
+  - credential-change
+  - cross-worker-dispatch
+  maxConcurrentTasks: 1
+  acceptsBroadcast: false
+  mcpServers: []
+  wrapper: intelligence:task
